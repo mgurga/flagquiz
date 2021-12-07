@@ -43,7 +43,7 @@ require('esbuild').build({
   entryPoints: ['src/app.js'],
   bundle: true,
   format: "esm",
-  outdir: 'dist',
+  outdir: 'docs',
   minify: false,
   bundle: true,
   splitting: false,
