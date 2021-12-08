@@ -8,7 +8,7 @@
   function startgame(s) {
     inmenu = false;
     gsettings = s.detail;
-    console.log("got settings: ", s.detail)
+    console.log("got settings: ", s.detail);
   }
 </script>
 
@@ -17,6 +17,10 @@
 <style>
   h1 {
     margin: 0;
+  }
+
+  :global(body){
+    background-color: rgb(209, 223, 228);
   }
 </style>
 

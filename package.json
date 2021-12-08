@@ -1,16 +1,16 @@
 {
-  "name": "svelte-esbuild-plugin",
+  "name": "flagquiz",
   "version": "1.0.0",
-  "description": "An implementation of the sample esbuild svelte plugin code at https://esbuild.github.io/plugins/#svelte-plugin",
+  "author": "mgurga",
+  "description": "Test a user's flag knowledge",
   "main": "build.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node . && servez docs"
   },
-  "keywords": ["esbuild", "svelte", "plugin"],
-  "contributors": ["Evan Wallace", "Aral Balkan"],
   "license": "MIT",
   "dependencies": {
     "esbuild": "^0.8.26",
-    "svelte": "^3.31.0"
+    "svelte": "^3.31.0",
+    "servez": "^1.12.0"
   }
 }

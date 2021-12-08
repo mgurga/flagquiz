@@ -21,9 +21,11 @@
         <option value="197">197 flags</option>
     </select>
 </label>
+<br />
 <label>
     Timed:
     <input type="checkbox" name="scales" bind:checked={timerenabled} />
 </label>
+<br />
 <br />
 <button on:click={startgame}>Start</button>

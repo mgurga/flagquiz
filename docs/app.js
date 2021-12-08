@@ -19,9 +19,6 @@ function safe_not_equal(a, b) {
 function is_empty(obj) {
   return Object.keys(obj).length === 0;
 }
-function null_to_empty(value) {
-  return value == null ? "" : value;
-}
 var is_client = typeof window !== "undefined";
 var tasks = new Set();
 function append(target, node) {
@@ -389,12 +386,16 @@ function create_fragment(ctx) {
   let option1;
   let option2;
   let t5;
-  let label1;
-  let t6;
-  let input;
-  let t7;
   let br1;
+  let t6;
+  let label1;
+  let t7;
+  let input;
   let t8;
+  let br2;
+  let t9;
+  let br3;
+  let t10;
   let button;
   let mounted;
   let dispose;
@@ -412,12 +413,16 @@ function create_fragment(ctx) {
       option2 = element("option");
       option2.textContent = "197 flags";
       t5 = space();
-      label1 = element("label");
-      t6 = text("Timed:\n    ");
-      input = element("input");
-      t7 = space();
       br1 = element("br");
+      t6 = space();
+      label1 = element("label");
+      t7 = text("Timed:\n    ");
+      input = element("input");
       t8 = space();
+      br2 = element("br");
+      t9 = space();
+      br3 = element("br");
+      t10 = space();
       button = element("button");
       button.textContent = "Start";
       option0.__value = "10";
@@ -443,13 +448,17 @@ function create_fragment(ctx) {
       append(select, option2);
       select_option(select, ctx[0]);
       insert(target, t5, anchor);
+      insert(target, br1, anchor);
+      insert(target, t6, anchor);
       insert(target, label1, anchor);
-      append(label1, t6);
+      append(label1, t7);
       append(label1, input);
       input.checked = ctx[1];
-      insert(target, t7, anchor);
-      insert(target, br1, anchor);
       insert(target, t8, anchor);
+      insert(target, br2, anchor);
+      insert(target, t9, anchor);
+      insert(target, br3, anchor);
+      insert(target, t10, anchor);
       insert(target, button, anchor);
       if (!mounted) {
         dispose = [
@@ -480,13 +489,21 @@ function create_fragment(ctx) {
       if (detaching)
         detach(t5);
       if (detaching)
-        detach(label1);
-      if (detaching)
-        detach(t7);
-      if (detaching)
         detach(br1);
       if (detaching)
+        detach(t6);
+      if (detaching)
+        detach(label1);
+      if (detaching)
         detach(t8);
+      if (detaching)
+        detach(br2);
+      if (detaching)
+        detach(t9);
+      if (detaching)
+        detach(br3);
+      if (detaching)
+        detach(t10);
       if (detaching)
         detach(button);
       mounted = false;
@@ -1356,121 +1373,137 @@ var countryflags = [
 // src/game.svelte
 function add_css() {
   var style = element("style");
-  style.id = "svelte-hvjeeu-style";
-  style.textContent = ".redborder.svelte-hvjeeu{border:10px solid red}h1.svelte-hvjeeu{margin:0}img.svelte-hvjeeu{width:50%}.center.svelte-hvjeeu{width:50%}";
+  style.id = "svelte-ypgbc1-style";
+  style.textContent = ".redborder.svelte-ypgbc1{border:10px solid red !important}p.svelte-ypgbc1{width:fit-content;margin:0px;font-size:20pt}h1.svelte-ypgbc1{margin:0}.root.svelte-ypgbc1{width:50%;margin:0 auto}.progress.svelte-ypgbc1{float:right}.center.svelte-ypgbc1{margin:0 auto;width:fit-content}.guess.svelte-ypgbc1{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}.guess.svelte-ypgbc1:hover{background-color:royalblue}.guesses.svelte-ypgbc1{width:75%;margin:0 auto}img.svelte-ypgbc1{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-ypgbc1{max-width:100%;max-height:30vh;width:100%;height:30vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}";
   append(document.head, style);
 }
 function create_fragment2(ctx) {
+  let div2;
   let h1;
   let t1;
-  let p;
+  let p0;
   let t2;
   let t3;
+  let p1;
+  let t4;
+  let t5;
+  let div0;
   let img;
   let img_src_value;
-  let t4;
-  let br0;
-  let t5;
-  let button0;
-  let t6_value = ctx[2][0].name + "";
   let t6;
-  let button0_class_value;
+  let div1;
+  let button0;
+  let t7_value = ctx[2][0].name + "";
   let t7;
-  let br1;
+  let button0_class_value;
   let t8;
-  let button1;
-  let t9_value = ctx[2][1].name + "";
+  let br0;
   let t9;
-  let button1_class_value;
+  let button1;
+  let t10_value = ctx[2][1].name + "";
   let t10;
-  let br2;
+  let button1_class_value;
   let t11;
-  let button2;
-  let t12_value = ctx[2][2].name + "";
+  let br1;
   let t12;
-  let button2_class_value;
+  let button2;
+  let t13_value = ctx[2][2].name + "";
   let t13;
-  let br3;
+  let button2_class_value;
   let t14;
-  let button3;
-  let t15_value = ctx[2][3].name + "";
+  let br2;
   let t15;
+  let button3;
+  let t16_value = ctx[2][3].name + "";
+  let t16;
   let button3_class_value;
   let mounted;
   let dispose;
   return {
     c() {
+      div2 = element("div");
       h1 = element("h1");
       h1.textContent = "What flag is this???";
       t1 = space();
-      p = element("p");
+      p0 = element("p");
       t2 = text(ctx[0]);
       t3 = space();
-      img = element("img");
-      t4 = space();
-      br0 = element("br");
+      p1 = element("p");
+      t4 = text(ctx[3]);
       t5 = space();
+      div0 = element("div");
+      img = element("img");
+      t6 = space();
+      div1 = element("div");
       button0 = element("button");
-      t6 = text(t6_value);
-      t7 = space();
-      br1 = element("br");
+      t7 = text(t7_value);
       t8 = space();
+      br0 = element("br");
+      t9 = space();
       button1 = element("button");
-      t9 = text(t9_value);
-      t10 = space();
-      br2 = element("br");
+      t10 = text(t10_value);
       t11 = space();
+      br1 = element("br");
+      t12 = space();
       button2 = element("button");
-      t12 = text(t12_value);
-      t13 = space();
-      br3 = element("br");
+      t13 = text(t13_value);
       t14 = space();
+      br2 = element("br");
+      t15 = space();
       button3 = element("button");
-      t15 = text(t15_value);
-      attr(h1, "class", "center svelte-hvjeeu");
-      attr(p, "class", "center svelte-hvjeeu");
-      attr(img, "class", "center svelte-hvjeeu");
+      t16 = text(t16_value);
+      attr(h1, "class", "center svelte-ypgbc1");
+      attr(p0, "class", "progress svelte-ypgbc1");
+      attr(p1, "class", "svelte-ypgbc1");
       if (img.src !== (img_src_value = ctx[1].url))
         attr(img, "src", img_src_value);
       attr(img, "alt", "flag");
-      attr(button0, "class", button0_class_value = "" + (null_to_empty(ctx[2][0].isRed ? "redborder" : "") + " svelte-hvjeeu"));
-      attr(button1, "class", button1_class_value = "" + (null_to_empty(ctx[2][1].isRed ? "redborder" : "") + " svelte-hvjeeu"));
-      attr(button2, "class", button2_class_value = "" + (null_to_empty(ctx[2][2].isRed ? "redborder" : "") + " svelte-hvjeeu"));
-      attr(button3, "class", button3_class_value = "" + (null_to_empty(ctx[2][3].isRed ? "redborder" : "") + " svelte-hvjeeu"));
+      attr(img, "class", "svelte-ypgbc1");
+      attr(div0, "class", "imgcontainer svelte-ypgbc1");
+      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-ypgbc1");
+      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-ypgbc1");
+      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-ypgbc1");
+      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-ypgbc1");
+      attr(div1, "class", "guesses svelte-ypgbc1");
+      attr(div2, "class", "root svelte-ypgbc1");
     },
     m(target, anchor) {
-      insert(target, h1, anchor);
-      insert(target, t1, anchor);
-      insert(target, p, anchor);
-      append(p, t2);
-      insert(target, t3, anchor);
-      insert(target, img, anchor);
-      insert(target, t4, anchor);
-      insert(target, br0, anchor);
-      insert(target, t5, anchor);
-      insert(target, button0, anchor);
-      append(button0, t6);
-      insert(target, t7, anchor);
-      insert(target, br1, anchor);
-      insert(target, t8, anchor);
-      insert(target, button1, anchor);
-      append(button1, t9);
-      insert(target, t10, anchor);
-      insert(target, br2, anchor);
-      insert(target, t11, anchor);
-      insert(target, button2, anchor);
-      append(button2, t12);
-      insert(target, t13, anchor);
-      insert(target, br3, anchor);
-      insert(target, t14, anchor);
-      insert(target, button3, anchor);
-      append(button3, t15);
+      insert(target, div2, anchor);
+      append(div2, h1);
+      append(div2, t1);
+      append(div2, p0);
+      append(p0, t2);
+      append(div2, t3);
+      append(div2, p1);
+      append(p1, t4);
+      append(div2, t5);
+      append(div2, div0);
+      append(div0, img);
+      append(div2, t6);
+      append(div2, div1);
+      append(div1, button0);
+      append(button0, t7);
+      append(div1, t8);
+      append(div1, br0);
+      append(div1, t9);
+      append(div1, button1);
+      append(button1, t10);
+      append(div1, t11);
+      append(div1, br1);
+      append(div1, t12);
+      append(div1, button2);
+      append(button2, t13);
+      append(div1, t14);
+      append(div1, br2);
+      append(div1, t15);
+      append(div1, button3);
+      append(button3, t16);
       if (!mounted) {
         dispose = [
-          listen(button0, "click", ctx[6]),
-          listen(button1, "click", ctx[7]),
-          listen(button2, "click", ctx[8]),
-          listen(button3, "click", ctx[9])
+          listen(button0, "click", ctx[7]),
+          listen(button1, "click", ctx[8]),
+          listen(button2, "click", ctx[9]),
+          listen(button3, "click", ctx[10])
         ];
         mounted = true;
       }
@@ -1478,27 +1511,29 @@ function create_fragment2(ctx) {
     p(ctx2, [dirty]) {
       if (dirty & 1)
         set_data(t2, ctx2[0]);
+      if (dirty & 8)
+        set_data(t4, ctx2[3]);
       if (dirty & 2 && img.src !== (img_src_value = ctx2[1].url)) {
         attr(img, "src", img_src_value);
       }
-      if (dirty & 4 && t6_value !== (t6_value = ctx2[2][0].name + ""))
-        set_data(t6, t6_value);
-      if (dirty & 4 && button0_class_value !== (button0_class_value = "" + (null_to_empty(ctx2[2][0].isRed ? "redborder" : "") + " svelte-hvjeeu"))) {
+      if (dirty & 4 && t7_value !== (t7_value = ctx2[2][0].name + ""))
+        set_data(t7, t7_value);
+      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
         attr(button0, "class", button0_class_value);
       }
-      if (dirty & 4 && t9_value !== (t9_value = ctx2[2][1].name + ""))
-        set_data(t9, t9_value);
-      if (dirty & 4 && button1_class_value !== (button1_class_value = "" + (null_to_empty(ctx2[2][1].isRed ? "redborder" : "") + " svelte-hvjeeu"))) {
+      if (dirty & 4 && t10_value !== (t10_value = ctx2[2][1].name + ""))
+        set_data(t10, t10_value);
+      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
         attr(button1, "class", button1_class_value);
       }
-      if (dirty & 4 && t12_value !== (t12_value = ctx2[2][2].name + ""))
-        set_data(t12, t12_value);
-      if (dirty & 4 && button2_class_value !== (button2_class_value = "" + (null_to_empty(ctx2[2][2].isRed ? "redborder" : "") + " svelte-hvjeeu"))) {
+      if (dirty & 4 && t13_value !== (t13_value = ctx2[2][2].name + ""))
+        set_data(t13, t13_value);
+      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
         attr(button2, "class", button2_class_value);
       }
-      if (dirty & 4 && t15_value !== (t15_value = ctx2[2][3].name + ""))
-        set_data(t15, t15_value);
-      if (dirty & 4 && button3_class_value !== (button3_class_value = "" + (null_to_empty(ctx2[2][3].isRed ? "redborder" : "") + " svelte-hvjeeu"))) {
+      if (dirty & 4 && t16_value !== (t16_value = ctx2[2][3].name + ""))
+        set_data(t16, t16_value);
+      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
         attr(button3, "class", button3_class_value);
       }
     },
@@ -1506,47 +1541,7 @@ function create_fragment2(ctx) {
     o: noop,
     d(detaching) {
       if (detaching)
-        detach(h1);
-      if (detaching)
-        detach(t1);
-      if (detaching)
-        detach(p);
-      if (detaching)
-        detach(t3);
-      if (detaching)
-        detach(img);
-      if (detaching)
-        detach(t4);
-      if (detaching)
-        detach(br0);
-      if (detaching)
-        detach(t5);
-      if (detaching)
-        detach(button0);
-      if (detaching)
-        detach(t7);
-      if (detaching)
-        detach(br1);
-      if (detaching)
-        detach(t8);
-      if (detaching)
-        detach(button1);
-      if (detaching)
-        detach(t10);
-      if (detaching)
-        detach(br2);
-      if (detaching)
-        detach(t11);
-      if (detaching)
-        detach(button2);
-      if (detaching)
-        detach(t13);
-      if (detaching)
-        detach(br3);
-      if (detaching)
-        detach(t14);
-      if (detaching)
-        detach(button3);
+        detach(div2);
       mounted = false;
       run_all(dispose);
     }
@@ -1569,6 +1564,7 @@ function instance2($$self, $$props, $$invalidate) {
   let flagnum = 0;
   let correct = 0;
   let missedquestions = 0;
+  let scorecount = "??/??";
   function populatequestion(num) {
     $$invalidate(1, currentflag = flaglist[num]);
     flagnum = num;
@@ -1588,7 +1584,8 @@ function instance2($$self, $$props, $$invalidate) {
         correct++;
       flagnum++;
       populatequestion(flagnum);
-      $$invalidate(0, progresscheck = correct + "/" + settings.count);
+      $$invalidate(0, progresscheck = flagnum + 1 + "/" + settings.count);
+      $$invalidate(3, scorecount = "Score: " + correct);
     } else {
       console.log("WRONG");
       $$invalidate(2, guesses[x].isRed = true, guesses);
@@ -1598,7 +1595,7 @@ function instance2($$self, $$props, $$invalidate) {
   function randomcountryflag() {
     return countryflags[Math.floor(Math.random() * countryflags.length)];
   }
-  function start(set) {
+  function start() {
     console.log("generating " + settings.count + " flags");
     while (flaglist.length < settings.count) {
       let rand2 = randomcountryflag();
@@ -1607,7 +1604,8 @@ function instance2($$self, $$props, $$invalidate) {
       }
     }
     console.log(flaglist);
-    $$invalidate(0, progresscheck = "0/" + settings.count);
+    $$invalidate(0, progresscheck = "1/" + settings.count);
+    $$invalidate(3, scorecount = "Score: 0");
     populatequestion(0);
   }
   start();
@@ -1617,12 +1615,13 @@ function instance2($$self, $$props, $$invalidate) {
   const click_handler_3 = () => chose(3);
   $$self.$$set = ($$props2) => {
     if ("settings" in $$props2)
-      $$invalidate(4, settings = $$props2.settings);
+      $$invalidate(5, settings = $$props2.settings);
   };
   return [
     progresscheck,
     currentflag,
     guesses,
+    scorecount,
     chose,
     settings,
     start,
@@ -1635,12 +1634,12 @@ function instance2($$self, $$props, $$invalidate) {
 var Game = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-hvjeeu-style"))
+    if (!document.getElementById("svelte-ypgbc1-style"))
       add_css();
-    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 4, start: 5});
+    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 5, start: 6});
   }
   get start() {
-    return this.$$.ctx[5];
+    return this.$$.ctx[6];
   }
 };
 var game_default = Game;
@@ -1648,8 +1647,8 @@ var game_default = Game;
 // src/app.svelte
 function add_css2() {
   var style = element("style");
-  style.id = "svelte-9k5trb-style";
-  style.textContent = "h1.svelte-9k5trb{margin:0}";
+  style.id = "svelte-8p7i5u-style";
+  style.textContent = "h1.svelte-8p7i5u{margin:0}body{background-color:rgb(209, 223, 228)}";
   append(document.head, style);
 }
 function create_else_block(ctx) {
@@ -1749,7 +1748,7 @@ function create_fragment3(ctx) {
       t1 = space();
       if_block.c();
       if_block_anchor = empty();
-      attr(h1, "class", "svelte-9k5trb");
+      attr(h1, "class", "svelte-8p7i5u");
     },
     m(target, anchor) {
       insert(target, h1, anchor);
@@ -1818,7 +1817,7 @@ function instance3($$self, $$props, $$invalidate) {
 var App = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-9k5trb-style"))
+    if (!document.getElementById("svelte-8p7i5u-style"))
       add_css2();
     init(this, options, instance3, create_fragment3, safe_not_equal, {});
   }
