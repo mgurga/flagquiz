@@ -121,8 +121,20 @@
   }
 
   .root {
-    width: 50%;
+    width: 30%;
     margin: 0 auto;
+  }
+
+  @media (max-width: 1000px) {
+    .root {
+      width: 40%;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .root {
+      width: 90%;
+    }
   }
 
   .progress {
@@ -165,9 +177,9 @@
 
   .imgcontainer {
     max-width: 100%;
-    max-height:30vh;
+    max-height: 40vh;
     width: 100%;
-    height: 30vh;
+    height: 40vh;
     object-fit: cover;
     overflow-y: hidden;
     display: flex;

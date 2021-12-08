@@ -16,13 +16,48 @@ function is_function(thing) {
 function safe_not_equal(a, b) {
   return a != a ? b == b : a !== b || (a && typeof a === "object" || typeof a === "function");
 }
+var src_url_equal_anchor;
+function src_url_equal(element_src, url) {
+  if (!src_url_equal_anchor) {
+    src_url_equal_anchor = document.createElement("a");
+  }
+  src_url_equal_anchor.href = url;
+  return element_src === src_url_equal_anchor.href;
+}
 function is_empty(obj) {
   return Object.keys(obj).length === 0;
 }
-var is_client = typeof window !== "undefined";
 var tasks = new Set();
+var is_hydrating = false;
+function start_hydrating() {
+  is_hydrating = true;
+}
+function end_hydrating() {
+  is_hydrating = false;
+}
 function append(target, node) {
   target.appendChild(node);
+}
+function append_styles(target, style_sheet_id, styles) {
+  const append_styles_to = get_root_for_style(target);
+  if (!append_styles_to.getElementById(style_sheet_id)) {
+    const style = element("style");
+    style.id = style_sheet_id;
+    style.textContent = styles;
+    append_stylesheet(append_styles_to, style);
+  }
+}
+function get_root_for_style(node) {
+  if (!node)
+    return document;
+  const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
+  if (root && root.host) {
+    return root;
+  }
+  return node.ownerDocument;
+}
+function append_stylesheet(node, style) {
+  append(node.head || node, style);
 }
 function insert(target, node, anchor) {
   target.insertBefore(node, anchor || null);
@@ -33,8 +68,8 @@ function detach(node) {
 function element(name) {
   return document.createElement(name);
 }
-function text(data2) {
-  return document.createTextNode(data2);
+function text(data) {
+  return document.createTextNode(data);
 }
 function space() {
   return text(" ");
@@ -55,10 +90,10 @@ function attr(node, attribute, value) {
 function children(element2) {
   return Array.from(element2.childNodes);
 }
-function set_data(text2, data2) {
-  data2 = "" + data2;
-  if (text2.wholeText !== data2)
-    text2.data = data2;
+function set_data(text2, data) {
+  data = "" + data;
+  if (text2.wholeText !== data)
+    text2.data = data;
 }
 function select_option(select, value) {
   for (let i = 0; i < select.options.length; i += 1) {
@@ -68,14 +103,15 @@ function select_option(select, value) {
       return;
     }
   }
+  select.selectedIndex = -1;
 }
 function select_value(select) {
   const selected_option = select.querySelector(":checked") || select.options[0];
   return selected_option && selected_option.__value;
 }
-function custom_event(type, detail) {
+function custom_event(type, detail, bubbles = false) {
   const e = document.createEvent("CustomEvent");
-  e.initCustomEvent(type, false, false, detail);
+  e.initCustomEvent(type, bubbles, false, detail);
   return e;
 }
 var active_docs = new Set();
@@ -234,18 +270,20 @@ function bind(component, name, callback) {
 function create_component(block) {
   block && block.c();
 }
-function mount_component(component, target, anchor) {
+function mount_component(component, target, anchor, customElement) {
   const {fragment, on_mount, on_destroy, after_update} = component.$$;
   fragment && fragment.m(target, anchor);
-  add_render_callback(() => {
-    const new_on_destroy = on_mount.map(run).filter(is_function);
-    if (on_destroy) {
-      on_destroy.push(...new_on_destroy);
-    } else {
-      run_all(new_on_destroy);
-    }
-    component.$$.on_mount = [];
-  });
+  if (!customElement) {
+    add_render_callback(() => {
+      const new_on_destroy = on_mount.map(run).filter(is_function);
+      if (on_destroy) {
+        on_destroy.push(...new_on_destroy);
+      } else {
+        run_all(new_on_destroy);
+      }
+      component.$$.on_mount = [];
+    });
+  }
   after_update.forEach(add_render_callback);
 }
 function destroy_component(component, detaching) {
@@ -265,10 +303,9 @@ function make_dirty(component, i) {
   }
   component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
 }
-function init(component, options, instance4, create_fragment4, not_equal, props, dirty = [-1]) {
+function init(component, options, instance4, create_fragment4, not_equal, props, append_styles2, dirty = [-1]) {
   const parent_component = current_component;
   set_current_component(component);
-  const prop_values = options.props || {};
   const $$ = component.$$ = {
     fragment: null,
     ctx: null,
@@ -278,15 +315,18 @@ function init(component, options, instance4, create_fragment4, not_equal, props,
     bound: blank_object(),
     on_mount: [],
     on_destroy: [],
+    on_disconnect: [],
     before_update: [],
     after_update: [],
-    context: new Map(parent_component ? parent_component.$$.context : []),
+    context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
     callbacks: blank_object(),
     dirty,
-    skip_bound: false
+    skip_bound: false,
+    root: options.target || parent_component.$$.root
   };
+  append_styles2 && append_styles2($$.root);
   let ready = false;
-  $$.ctx = instance4 ? instance4(component, prop_values, (i, ret, ...rest) => {
+  $$.ctx = instance4 ? instance4(component, options.props || {}, (i, ret, ...rest) => {
     const value = rest.length ? rest[0] : ret;
     if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
       if (!$$.skip_bound && $$.bound[i])
@@ -302,6 +342,7 @@ function init(component, options, instance4, create_fragment4, not_equal, props,
   $$.fragment = create_fragment4 ? create_fragment4($$.ctx) : false;
   if (options.target) {
     if (options.hydrate) {
+      start_hydrating();
       const nodes = children(options.target);
       $$.fragment && $$.fragment.l(nodes);
       nodes.forEach(detach);
@@ -310,7 +351,8 @@ function init(component, options, instance4, create_fragment4, not_equal, props,
     }
     if (options.intro)
       transition_in(component.$$.fragment);
-    mount_component(component, options.target, options.anchor);
+    mount_component(component, options.target, options.anchor, options.customElement);
+    end_hydrating();
     flush();
   }
   set_current_component(parent_component);
@@ -323,12 +365,17 @@ if (typeof HTMLElement === "function") {
       this.attachShadow({mode: "open"});
     }
     connectedCallback() {
+      const {on_mount} = this.$$;
+      this.$$.on_disconnect = on_mount.map(run).filter(is_function);
       for (const key in this.$$.slotted) {
         this.appendChild(this.$$.slotted[key]);
       }
     }
     attributeChangedCallback(attr2, _oldValue, newValue) {
       this[attr2] = newValue;
+    }
+    disconnectedCallback() {
+      run_all(this.$$.on_disconnect);
     }
     $destroy() {
       destroy_component(this, 1);
@@ -1371,11 +1418,8 @@ var countryflags = [
 ];
 
 // src/game.svelte
-function add_css() {
-  var style = element("style");
-  style.id = "svelte-ypgbc1-style";
-  style.textContent = ".redborder.svelte-ypgbc1{border:10px solid red !important}p.svelte-ypgbc1{width:fit-content;margin:0px;font-size:20pt}h1.svelte-ypgbc1{margin:0}.root.svelte-ypgbc1{width:50%;margin:0 auto}.progress.svelte-ypgbc1{float:right}.center.svelte-ypgbc1{margin:0 auto;width:fit-content}.guess.svelte-ypgbc1{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}.guess.svelte-ypgbc1:hover{background-color:royalblue}.guesses.svelte-ypgbc1{width:75%;margin:0 auto}img.svelte-ypgbc1{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-ypgbc1{max-width:100%;max-height:30vh;width:100%;height:30vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}";
-  append(document.head, style);
+function add_css(target) {
+  append_styles(target, "svelte-u261s7", ".redborder.svelte-u261s7{border:10px solid red !important}p.svelte-u261s7{width:fit-content;margin:0px;font-size:20pt}h1.svelte-u261s7{margin:0}.root.svelte-u261s7{width:30%;margin:0 auto}@media(max-width: 1000px){.root.svelte-u261s7{width:40%}}@media(max-width: 800px){.root.svelte-u261s7{width:90%}}.progress.svelte-u261s7{float:right}.center.svelte-u261s7{margin:0 auto;width:fit-content}.guess.svelte-u261s7{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}.guess.svelte-u261s7:hover{background-color:royalblue}.guesses.svelte-u261s7{width:75%;margin:0 auto}img.svelte-u261s7{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-u261s7{max-width:100%;max-height:40vh;width:100%;height:40vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}");
 }
 function create_fragment2(ctx) {
   let div2;
@@ -1452,20 +1496,20 @@ function create_fragment2(ctx) {
       t15 = space();
       button3 = element("button");
       t16 = text(t16_value);
-      attr(h1, "class", "center svelte-ypgbc1");
-      attr(p0, "class", "progress svelte-ypgbc1");
-      attr(p1, "class", "svelte-ypgbc1");
-      if (img.src !== (img_src_value = ctx[1].url))
+      attr(h1, "class", "center svelte-u261s7");
+      attr(p0, "class", "progress svelte-u261s7");
+      attr(p1, "class", "svelte-u261s7");
+      if (!src_url_equal(img.src, img_src_value = ctx[1].url))
         attr(img, "src", img_src_value);
       attr(img, "alt", "flag");
-      attr(img, "class", "svelte-ypgbc1");
-      attr(div0, "class", "imgcontainer svelte-ypgbc1");
-      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-ypgbc1");
-      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-ypgbc1");
-      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-ypgbc1");
-      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-ypgbc1");
-      attr(div1, "class", "guesses svelte-ypgbc1");
-      attr(div2, "class", "root svelte-ypgbc1");
+      attr(img, "class", "svelte-u261s7");
+      attr(div0, "class", "imgcontainer svelte-u261s7");
+      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-u261s7");
+      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-u261s7");
+      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-u261s7");
+      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-u261s7");
+      attr(div1, "class", "guesses svelte-u261s7");
+      attr(div2, "class", "root svelte-u261s7");
     },
     m(target, anchor) {
       insert(target, div2, anchor);
@@ -1513,27 +1557,27 @@ function create_fragment2(ctx) {
         set_data(t2, ctx2[0]);
       if (dirty & 8)
         set_data(t4, ctx2[3]);
-      if (dirty & 2 && img.src !== (img_src_value = ctx2[1].url)) {
+      if (dirty & 2 && !src_url_equal(img.src, img_src_value = ctx2[1].url)) {
         attr(img, "src", img_src_value);
       }
       if (dirty & 4 && t7_value !== (t7_value = ctx2[2][0].name + ""))
         set_data(t7, t7_value);
-      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
+      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-u261s7")) {
         attr(button0, "class", button0_class_value);
       }
       if (dirty & 4 && t10_value !== (t10_value = ctx2[2][1].name + ""))
         set_data(t10, t10_value);
-      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
+      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-u261s7")) {
         attr(button1, "class", button1_class_value);
       }
       if (dirty & 4 && t13_value !== (t13_value = ctx2[2][2].name + ""))
         set_data(t13, t13_value);
-      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
+      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-u261s7")) {
         attr(button2, "class", button2_class_value);
       }
       if (dirty & 4 && t16_value !== (t16_value = ctx2[2][3].name + ""))
         set_data(t16, t16_value);
-      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-ypgbc1")) {
+      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-u261s7")) {
         attr(button3, "class", button3_class_value);
       }
     },
@@ -1634,9 +1678,7 @@ function instance2($$self, $$props, $$invalidate) {
 var Game = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-ypgbc1-style"))
-      add_css();
-    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 5, start: 6});
+    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 5, start: 6}, add_css);
   }
   get start() {
     return this.$$.ctx[6];
@@ -1645,31 +1687,28 @@ var Game = class extends SvelteComponent {
 var game_default = Game;
 
 // src/app.svelte
-function add_css2() {
-  var style = element("style");
-  style.id = "svelte-8p7i5u-style";
-  style.textContent = "h1.svelte-8p7i5u{margin:0}body{background-color:rgb(209, 223, 228)}";
-  append(document.head, style);
+function add_css2(target) {
+  append_styles(target, "svelte-8p7i5u", "h1.svelte-8p7i5u{margin:0}body{background-color:rgb(209, 223, 228)}");
 }
 function create_else_block(ctx) {
-  let game2;
+  let game;
   let updating_settings;
   let current;
   function game_settings_binding(value) {
-    ctx[3].call(null, value);
+    ctx[3](value);
   }
   let game_props = {};
   if (ctx[1] !== void 0) {
     game_props.settings = ctx[1];
   }
-  game2 = new game_default({props: game_props});
-  binding_callbacks.push(() => bind(game2, "settings", game_settings_binding));
+  game = new game_default({props: game_props});
+  binding_callbacks.push(() => bind(game, "settings", game_settings_binding));
   return {
     c() {
-      create_component(game2.$$.fragment);
+      create_component(game.$$.fragment);
     },
     m(target, anchor) {
-      mount_component(game2, target, anchor);
+      mount_component(game, target, anchor);
       current = true;
     },
     p(ctx2, dirty) {
@@ -1679,49 +1718,49 @@ function create_else_block(ctx) {
         game_changes.settings = ctx2[1];
         add_flush_callback(() => updating_settings = false);
       }
-      game2.$set(game_changes);
+      game.$set(game_changes);
     },
     i(local) {
       if (current)
         return;
-      transition_in(game2.$$.fragment, local);
+      transition_in(game.$$.fragment, local);
       current = true;
     },
     o(local) {
-      transition_out(game2.$$.fragment, local);
+      transition_out(game.$$.fragment, local);
       current = false;
     },
     d(detaching) {
-      destroy_component(game2, detaching);
+      destroy_component(game, detaching);
     }
   };
 }
 function create_if_block(ctx) {
-  let menu2;
+  let menu;
   let current;
-  menu2 = new menu_default({});
-  menu2.$on("startgame", ctx[2]);
+  menu = new menu_default({});
+  menu.$on("startgame", ctx[2]);
   return {
     c() {
-      create_component(menu2.$$.fragment);
+      create_component(menu.$$.fragment);
     },
     m(target, anchor) {
-      mount_component(menu2, target, anchor);
+      mount_component(menu, target, anchor);
       current = true;
     },
     p: noop,
     i(local) {
       if (current)
         return;
-      transition_in(menu2.$$.fragment, local);
+      transition_in(menu.$$.fragment, local);
       current = true;
     },
     o(local) {
-      transition_out(menu2.$$.fragment, local);
+      transition_out(menu.$$.fragment, local);
       current = false;
     },
     d(detaching) {
-      destroy_component(menu2, detaching);
+      destroy_component(menu, detaching);
     }
   };
 }
@@ -1817,9 +1856,7 @@ function instance3($$self, $$props, $$invalidate) {
 var App = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-8p7i5u-style"))
-      add_css2();
-    init(this, options, instance3, create_fragment3, safe_not_equal, {});
+    init(this, options, instance3, create_fragment3, safe_not_equal, {}, add_css2);
   }
 };
 var app_default = App;

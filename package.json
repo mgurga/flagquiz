@@ -5,7 +5,7 @@
   "description": "Test a user's flag knowledge",
   "main": "build.js",
   "scripts": {
-    "start": "node . && servez docs"
+    "start": "node . && npx servez docs"
   },
   "license": "MIT",
   "dependencies": {
