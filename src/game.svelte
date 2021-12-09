@@ -23,14 +23,19 @@
     currentflag = flaglist[num];
     flagnum = num;
     missedquestions = 0;
+    let guessing = currentflag;
 
-    for (var i = 0; i < 4; i++) {
-      guesses[i].name = randomcountryflag().name;
+    for (var i = 0; i < guesses.length; i++) {
+      let rand = randomcountryflag(guessing.region);
+
+      while (rand == guessing) rand = randomcountryflag();
+
+      guesses[i].name = rand.name;
       guesses[i].isRed = false;
     }
 
     console.log(currentflag);
-    guesses[rand(0, 3)].name = currentflag.name;
+    guesses[rand(0, guesses.length - 1)].name = guessing.name;
   }
 
   function chose(x) {
@@ -55,8 +60,12 @@
     }
   }
 
-  function randomcountryflag() {
-    return countryflags[Math.floor(Math.random() * countryflags.length)];
+  function randomcountryflag(region) {
+    let rand = countryflags[Math.floor(Math.random() * countryflags.length)];
+    if(region == undefined)
+      return rand;
+    else
+      return (rand.region == region ? rand : randomcountryflag(region))
   }
 
   function rand(min, max) {
@@ -81,11 +90,11 @@
   }
 
   function handleKeydown(event) {
-		if(event.key == "1") chose(0);
+    if(event.key == "1") chose(0);
     if(event.key == "2") chose(1);
     if(event.key == "3") chose(2);
     if(event.key == "4") chose(3);
-	}
+  }
 
   start();
 </script>
@@ -126,13 +135,6 @@
     border: 10px solid red !important; 
   }
 
-  .root {
-    width: 50%;
-    margin: 0 auto;
-  }
-  @media (max-width: 800px) { .root { width: 90%; } }
-  @media (max-width: 1000px) { .root { width: 50%; } }
-
   p {
     width: fit-content;
     margin: 0px;
@@ -152,6 +154,9 @@
     width: fit-content;
   }
 
+  .guess {
+    font-size: 20pt;
+  }
   .guess:hover {
     background-color: royalblue;
   }
@@ -160,6 +165,7 @@
     width: 75%;
     margin: 0 auto;
   }
+
 
   img {
     width: 100%;
@@ -170,9 +176,9 @@
 
   .imgcontainer {
     max-width: 100%;
-    max-height: 40vh;
+    max-height: 50vh;
     width: 100%;
-    height: 40vh;
+    height: 50vh;
     object-fit: cover;
     overflow-y: hidden;
     display: flex;

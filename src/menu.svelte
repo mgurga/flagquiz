@@ -31,12 +31,3 @@
   <br />
   <button on:click={startgame}>Start</button>
 </div>
-
-<style>
-  .root {
-    width: 50%;
-    margin: 0 auto;
-  }
-  @media (max-width: 1000px) { .root { width: 40%; } }
-  @media (max-width: 800px) { .root { width: 90%; } }
-</style>

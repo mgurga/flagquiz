@@ -1,7 +1,7 @@
 <script>
-  import Menu from './menu.svelte';
-  import Game from './game.svelte';
-  import Finish from './finish.svelte';
+  import Menu from "./menu.svelte";
+  import Game from "./game.svelte";
+  import Finish from "./finish.svelte";
 
   let menu = 0; // 0 = Home, 1 = Game, 2 = Win
   let gsettings;
@@ -23,18 +23,40 @@
   <h1>FLAG QUIZ</h1>
 </div>
 
+<svelte:head>
+  <style>
+    .root {
+      width: 30%;
+      margin: 0 auto;
+    }
+    @media (max-width: 1100px) {
+      .root {
+        width: 60%;
+      }
+    }
+    @media (max-width: 700px) {
+      .root {
+        width: 90%;
+      }
+    }
+  </style>
+</svelte:head>
+
+{#if menu === 0}
+  <Menu on:startgame={startgame} />
+{:else if menu === 1}
+  <Game bind:settings={gsettings} on:win={winner} />
+{:else if menu === 2}
+  <Finish bind:enddata />
+{:else}
+  <p>invalid menu</p>
+{/if}
+
 <style>
   h1 {
     margin: 0 auto;
     width: fit-content;
   }
-
-  .root {
-    width: 50%;
-    margin: 0 auto;
-  }
-  @media (max-width: 1000px) { .root { width: 40%; } }
-  @media (max-width: 800px) { .root { width: 90%; } }
 
   :global(body) {
     background-color: rgb(209, 223, 228);
@@ -53,13 +75,3 @@
     margin-right: auto;
   }
 </style>
-
-{#if menu === 0}
-  <Menu on:startgame={startgame} />
-{:else if menu === 1}
-  <Game bind:settings={gsettings} on:win={winner} />
-{:else if menu === 2}
-  <Finish bind:enddata={enddata} />
-{:else}
-  <p>invalid menu</p>
-{/if}
