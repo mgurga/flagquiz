@@ -2,6 +2,7 @@
   export let settings;
 
   import { countryflags } from "./data.js";
+  import { createEventDispatcher } from "svelte";
 
   let progresscheck = "??/??";
   let currentflag = {};
@@ -16,6 +17,7 @@
   let correct = 0;
   let missedquestions = 0;
   let scorecount = "??/??";
+  const dispatch = createEventDispatcher();
 
   function populatequestion(num) {
     currentflag = flaglist[num];
@@ -37,9 +39,15 @@
       console.log("CORRECT");
       if (missedquestions == 0) correct++;
       flagnum++;
+      if ((flagnum + 1) == settings.count) {
+        dispatch("win", {
+            "settings": settings,
+            "correct": correct,
+        });
+      }
       populatequestion(flagnum);
       progresscheck = flagnum + 1 + "/" + settings.count;
-      scorecount = "Score: " + correct
+      scorecount = "Score: " + correct;
     } else {
       console.log("WRONG");
       guesses[x].isRed = true;
@@ -72,9 +80,17 @@
     populatequestion(0);
   }
 
+  function handleKeydown(event) {
+		if(event.key == "1") chose(0);
+    if(event.key == "2") chose(1);
+    if(event.key == "3") chose(2);
+    if(event.key == "4") chose(3);
+	}
+
   start();
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <div class="root">
   <h1 class="center">What flag is this???</h1>
   <p class="progress">{progresscheck}</p>
@@ -110,6 +126,13 @@
     border: 10px solid red !important; 
   }
 
+  .root {
+    width: 50%;
+    margin: 0 auto;
+  }
+  @media (max-width: 800px) { .root { width: 90%; } }
+  @media (max-width: 1000px) { .root { width: 50%; } }
+
   p {
     width: fit-content;
     margin: 0px;
@@ -120,23 +143,6 @@
     margin: 0;
   }
 
-  .root {
-    width: 30%;
-    margin: 0 auto;
-  }
-
-  @media (max-width: 1000px) {
-    .root {
-      width: 40%;
-    }
-  }
-
-  @media (max-width: 800px) {
-    .root {
-      width: 90%;
-    }
-  }
-
   .progress {
     float: right;
   }
@@ -144,19 +150,6 @@
   .center {
     margin: 0 auto;
     width: fit-content;
-  }
-
-  .guess {
-    width: 100%;
-    border: 1px solid black;
-    text-align: center;
-    background-color: rgb(77, 77, 255);
-    color: white;
-    padding: 10px;
-    margin-top: 2px;
-    margin-bottom: 2px;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .guess:hover {

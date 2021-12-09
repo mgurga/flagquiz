@@ -303,7 +303,7 @@ function make_dirty(component, i) {
   }
   component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
 }
-function init(component, options, instance4, create_fragment4, not_equal, props, append_styles2, dirty = [-1]) {
+function init(component, options, instance5, create_fragment5, not_equal, props, append_styles2, dirty = [-1]) {
   const parent_component = current_component;
   set_current_component(component);
   const $$ = component.$$ = {
@@ -326,7 +326,7 @@ function init(component, options, instance4, create_fragment4, not_equal, props,
   };
   append_styles2 && append_styles2($$.root);
   let ready = false;
-  $$.ctx = instance4 ? instance4(component, options.props || {}, (i, ret, ...rest) => {
+  $$.ctx = instance5 ? instance5(component, options.props || {}, (i, ret, ...rest) => {
     const value = rest.length ? rest[0] : ret;
     if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
       if (!$$.skip_bound && $$.bound[i])
@@ -339,7 +339,7 @@ function init(component, options, instance4, create_fragment4, not_equal, props,
   $$.update();
   ready = true;
   run_all($$.before_update);
-  $$.fragment = create_fragment4 ? create_fragment4($$.ctx) : false;
+  $$.fragment = create_fragment5 ? create_fragment5($$.ctx) : false;
   if (options.target) {
     if (options.hydrate) {
       start_hydrating();
@@ -423,9 +423,13 @@ var SvelteComponent = class {
 };
 
 // src/menu.svelte
+function add_css(target) {
+  append_styles(target, "svelte-kwz9uc", ".root.svelte-kwz9uc{width:50%;margin:0 auto}@media(max-width: 1000px){.root.svelte-kwz9uc{width:40%}}@media(max-width: 800px){.root.svelte-kwz9uc{width:90%}}");
+}
 function create_fragment(ctx) {
   let br0;
   let t0;
+  let div;
   let label0;
   let t1;
   let select;
@@ -450,8 +454,9 @@ function create_fragment(ctx) {
     c() {
       br0 = element("br");
       t0 = space();
+      div = element("div");
       label0 = element("label");
-      t1 = text("Flag count:\n    ");
+      t1 = text("Flag count:\n      ");
       select = element("select");
       option0 = element("option");
       option0.textContent = "10 flags";
@@ -463,7 +468,7 @@ function create_fragment(ctx) {
       br1 = element("br");
       t6 = space();
       label1 = element("label");
-      t7 = text("Timed:\n    ");
+      t7 = text("Timed:\n      ");
       input = element("input");
       t8 = space();
       br2 = element("br");
@@ -483,30 +488,32 @@ function create_fragment(ctx) {
         add_render_callback(() => ctx[3].call(select));
       attr(input, "type", "checkbox");
       attr(input, "name", "scales");
+      attr(div, "class", "root svelte-kwz9uc");
     },
     m(target, anchor) {
       insert(target, br0, anchor);
       insert(target, t0, anchor);
-      insert(target, label0, anchor);
+      insert(target, div, anchor);
+      append(div, label0);
       append(label0, t1);
       append(label0, select);
       append(select, option0);
       append(select, option1);
       append(select, option2);
       select_option(select, ctx[0]);
-      insert(target, t5, anchor);
-      insert(target, br1, anchor);
-      insert(target, t6, anchor);
-      insert(target, label1, anchor);
+      append(div, t5);
+      append(div, br1);
+      append(div, t6);
+      append(div, label1);
       append(label1, t7);
       append(label1, input);
       input.checked = ctx[1];
-      insert(target, t8, anchor);
-      insert(target, br2, anchor);
-      insert(target, t9, anchor);
-      insert(target, br3, anchor);
-      insert(target, t10, anchor);
-      insert(target, button, anchor);
+      append(div, t8);
+      append(div, br2);
+      append(div, t9);
+      append(div, br3);
+      append(div, t10);
+      append(div, button);
       if (!mounted) {
         dispose = [
           listen(select, "change", ctx[3]),
@@ -532,27 +539,7 @@ function create_fragment(ctx) {
       if (detaching)
         detach(t0);
       if (detaching)
-        detach(label0);
-      if (detaching)
-        detach(t5);
-      if (detaching)
-        detach(br1);
-      if (detaching)
-        detach(t6);
-      if (detaching)
-        detach(label1);
-      if (detaching)
-        detach(t8);
-      if (detaching)
-        detach(br2);
-      if (detaching)
-        detach(t9);
-      if (detaching)
-        detach(br3);
-      if (detaching)
-        detach(t10);
-      if (detaching)
-        detach(button);
+        detach(div);
       mounted = false;
       run_all(dispose);
     }
@@ -584,7 +571,7 @@ function instance($$self, $$props, $$invalidate) {
 var Menu = class extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance, create_fragment, safe_not_equal, {});
+    init(this, options, instance, create_fragment, safe_not_equal, {}, add_css);
   }
 };
 var menu_default = Menu;
@@ -1418,8 +1405,8 @@ var countryflags = [
 ];
 
 // src/game.svelte
-function add_css(target) {
-  append_styles(target, "svelte-u261s7", ".redborder.svelte-u261s7{border:10px solid red !important}p.svelte-u261s7{width:fit-content;margin:0px;font-size:20pt}h1.svelte-u261s7{margin:0}.root.svelte-u261s7{width:30%;margin:0 auto}@media(max-width: 1000px){.root.svelte-u261s7{width:40%}}@media(max-width: 800px){.root.svelte-u261s7{width:90%}}.progress.svelte-u261s7{float:right}.center.svelte-u261s7{margin:0 auto;width:fit-content}.guess.svelte-u261s7{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}.guess.svelte-u261s7:hover{background-color:royalblue}.guesses.svelte-u261s7{width:75%;margin:0 auto}img.svelte-u261s7{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-u261s7{max-width:100%;max-height:40vh;width:100%;height:40vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}");
+function add_css2(target) {
+  append_styles(target, "svelte-12ezsdn", ".redborder.svelte-12ezsdn{border:10px solid red !important}.root.svelte-12ezsdn{width:50%;margin:0 auto}@media(max-width: 800px){.root.svelte-12ezsdn{width:90%}}@media(max-width: 1000px){.root.svelte-12ezsdn{width:50%}}p.svelte-12ezsdn{width:fit-content;margin:0px;font-size:20pt}h1.svelte-12ezsdn{margin:0}.progress.svelte-12ezsdn{float:right}.center.svelte-12ezsdn{margin:0 auto;width:fit-content}.guess.svelte-12ezsdn:hover{background-color:royalblue}.guesses.svelte-12ezsdn{width:75%;margin:0 auto}img.svelte-12ezsdn{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-12ezsdn{max-width:100%;max-height:40vh;width:100%;height:40vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}");
 }
 function create_fragment2(ctx) {
   let div2;
@@ -1496,20 +1483,20 @@ function create_fragment2(ctx) {
       t15 = space();
       button3 = element("button");
       t16 = text(t16_value);
-      attr(h1, "class", "center svelte-u261s7");
-      attr(p0, "class", "progress svelte-u261s7");
-      attr(p1, "class", "svelte-u261s7");
+      attr(h1, "class", "center svelte-12ezsdn");
+      attr(p0, "class", "progress svelte-12ezsdn");
+      attr(p1, "class", "svelte-12ezsdn");
       if (!src_url_equal(img.src, img_src_value = ctx[1].url))
         attr(img, "src", img_src_value);
       attr(img, "alt", "flag");
-      attr(img, "class", "svelte-u261s7");
-      attr(div0, "class", "imgcontainer svelte-u261s7");
-      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-u261s7");
-      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-u261s7");
-      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-u261s7");
-      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-u261s7");
-      attr(div1, "class", "guesses svelte-u261s7");
-      attr(div2, "class", "root svelte-u261s7");
+      attr(img, "class", "svelte-12ezsdn");
+      attr(div0, "class", "imgcontainer svelte-12ezsdn");
+      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-12ezsdn");
+      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-12ezsdn");
+      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-12ezsdn");
+      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-12ezsdn");
+      attr(div1, "class", "guesses svelte-12ezsdn");
+      attr(div2, "class", "root svelte-12ezsdn");
     },
     m(target, anchor) {
       insert(target, div2, anchor);
@@ -1544,10 +1531,11 @@ function create_fragment2(ctx) {
       append(button3, t16);
       if (!mounted) {
         dispose = [
-          listen(button0, "click", ctx[7]),
-          listen(button1, "click", ctx[8]),
-          listen(button2, "click", ctx[9]),
-          listen(button3, "click", ctx[10])
+          listen(window, "keydown", ctx[5]),
+          listen(button0, "click", ctx[8]),
+          listen(button1, "click", ctx[9]),
+          listen(button2, "click", ctx[10]),
+          listen(button3, "click", ctx[11])
         ];
         mounted = true;
       }
@@ -1562,22 +1550,22 @@ function create_fragment2(ctx) {
       }
       if (dirty & 4 && t7_value !== (t7_value = ctx2[2][0].name + ""))
         set_data(t7, t7_value);
-      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-u261s7")) {
+      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-12ezsdn")) {
         attr(button0, "class", button0_class_value);
       }
       if (dirty & 4 && t10_value !== (t10_value = ctx2[2][1].name + ""))
         set_data(t10, t10_value);
-      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-u261s7")) {
+      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-12ezsdn")) {
         attr(button1, "class", button1_class_value);
       }
       if (dirty & 4 && t13_value !== (t13_value = ctx2[2][2].name + ""))
         set_data(t13, t13_value);
-      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-u261s7")) {
+      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-12ezsdn")) {
         attr(button2, "class", button2_class_value);
       }
       if (dirty & 4 && t16_value !== (t16_value = ctx2[2][3].name + ""))
         set_data(t16, t16_value);
-      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-u261s7")) {
+      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-12ezsdn")) {
         attr(button3, "class", button3_class_value);
       }
     },
@@ -1609,6 +1597,7 @@ function instance2($$self, $$props, $$invalidate) {
   let correct = 0;
   let missedquestions = 0;
   let scorecount = "??/??";
+  const dispatch = createEventDispatcher();
   function populatequestion(num) {
     $$invalidate(1, currentflag = flaglist[num]);
     flagnum = num;
@@ -1627,6 +1616,9 @@ function instance2($$self, $$props, $$invalidate) {
       if (missedquestions == 0)
         correct++;
       flagnum++;
+      if (flagnum + 1 == settings.count) {
+        dispatch("win", {settings, correct});
+      }
       populatequestion(flagnum);
       $$invalidate(0, progresscheck = flagnum + 1 + "/" + settings.count);
       $$invalidate(3, scorecount = "Score: " + correct);
@@ -1652,6 +1644,16 @@ function instance2($$self, $$props, $$invalidate) {
     $$invalidate(3, scorecount = "Score: 0");
     populatequestion(0);
   }
+  function handleKeydown(event) {
+    if (event.key == "1")
+      chose(0);
+    if (event.key == "2")
+      chose(1);
+    if (event.key == "3")
+      chose(2);
+    if (event.key == "4")
+      chose(3);
+  }
   start();
   const click_handler = () => chose(0);
   const click_handler_1 = () => chose(1);
@@ -1659,7 +1661,7 @@ function instance2($$self, $$props, $$invalidate) {
   const click_handler_3 = () => chose(3);
   $$self.$$set = ($$props2) => {
     if ("settings" in $$props2)
-      $$invalidate(5, settings = $$props2.settings);
+      $$invalidate(6, settings = $$props2.settings);
   };
   return [
     progresscheck,
@@ -1667,6 +1669,7 @@ function instance2($$self, $$props, $$invalidate) {
     guesses,
     scorecount,
     chose,
+    handleKeydown,
     settings,
     start,
     click_handler,
@@ -1678,24 +1681,237 @@ function instance2($$self, $$props, $$invalidate) {
 var Game = class extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 5, start: 6}, add_css);
+    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 6, start: 7}, add_css2);
   }
   get start() {
-    return this.$$.ctx[6];
+    return this.$$.ctx[7];
   }
 };
 var game_default = Game;
 
-// src/app.svelte
-function add_css2(target) {
-  append_styles(target, "svelte-8p7i5u", "h1.svelte-8p7i5u{margin:0}body{background-color:rgb(209, 223, 228)}");
+// src/finish.svelte
+function add_css3(target) {
+  append_styles(target, "svelte-132t7yw", ".root.svelte-132t7yw{width:50%;margin:0 auto}@media(max-width: 1000px){.root.svelte-132t7yw{width:40%}}@media(max-width: 800px){.root.svelte-132t7yw{width:90%}}.result.svelte-132t7yw,.rainbow.svelte-132t7yw,.center.svelte-132t7yw{margin:0 auto;font-size:30pt;width:fit-content}.result.svelte-132t7yw{animation:svelte-132t7yw-monochrome 2.5s linear;animation-iteration-count:infinite}.rainbow.svelte-132t7yw{animation:svelte-132t7yw-rainbow 2.5s linear;animation-iteration-count:infinite;font-size:40pt}@keyframes svelte-132t7yw-rainbow{100%,0%{color:rgb(255,0,0)}8%{color:rgb(255,127,0)}16%{color:rgb(255,255,0)}25%{color:rgb(127,255,0)}33%{color:rgb(0,255,0)}41%{color:rgb(0,255,127)}50%{color:rgb(0,255,255)}58%{color:rgb(0,127,255)}66%{color:rgb(0,0,255)}75%{color:rgb(127,0,255)}83%{color:rgb(255,0,255)}91%{color:rgb(255,0,127)}}@keyframes svelte-132t7yw-monochrome{0%,100%{color:white}50%{color:black}}");
 }
 function create_else_block(ctx) {
+  let h2;
+  return {
+    c() {
+      h2 = element("h2");
+      h2.textContent = "bad";
+      attr(h2, "class", "result svelte-132t7yw");
+    },
+    m(target, anchor) {
+      insert(target, h2, anchor);
+    },
+    d(detaching) {
+      if (detaching)
+        detach(h2);
+    }
+  };
+}
+function create_if_block_1(ctx) {
+  let h2;
+  return {
+    c() {
+      h2 = element("h2");
+      h2.textContent = "ok i guess";
+      attr(h2, "class", "result svelte-132t7yw");
+    },
+    m(target, anchor) {
+      insert(target, h2, anchor);
+    },
+    d(detaching) {
+      if (detaching)
+        detach(h2);
+    }
+  };
+}
+function create_if_block(ctx) {
+  let h1;
+  return {
+    c() {
+      h1 = element("h1");
+      h1.textContent = "EPIC";
+      attr(h1, "class", "rainbow svelte-132t7yw");
+    },
+    m(target, anchor) {
+      insert(target, h1, anchor);
+    },
+    d(detaching) {
+      if (detaching)
+        detach(h1);
+    }
+  };
+}
+function create_fragment3(ctx) {
+  let div;
+  let h1;
+  let t1;
+  let br0;
+  let t2;
+  let t3;
+  let br1;
+  let t4;
+  let h3;
+  let t5;
+  let t6_value = ctx[0].correct + 1 + "";
+  let t6;
+  let t7;
+  let t8_value = ctx[0].settings.count + "";
+  let t8;
+  function select_block_type(ctx2, dirty) {
+    if (ctx2[1] == 100)
+      return create_if_block;
+    if (ctx2[1] < 100 && ctx2[1] >= 50)
+      return create_if_block_1;
+    return create_else_block;
+  }
+  let current_block_type = select_block_type(ctx, -1);
+  let if_block = current_block_type(ctx);
+  return {
+    c() {
+      div = element("div");
+      h1 = element("h1");
+      h1.textContent = "FINISHED";
+      t1 = space();
+      br0 = element("br");
+      t2 = space();
+      if_block.c();
+      t3 = space();
+      br1 = element("br");
+      t4 = space();
+      h3 = element("h3");
+      t5 = text("YOUR SCORE: ");
+      t6 = text(t6_value);
+      t7 = text("/");
+      t8 = text(t8_value);
+      attr(h1, "class", "center svelte-132t7yw");
+      attr(h3, "class", "center svelte-132t7yw");
+      attr(div, "class", "root svelte-132t7yw");
+    },
+    m(target, anchor) {
+      insert(target, div, anchor);
+      append(div, h1);
+      append(div, t1);
+      append(div, br0);
+      append(div, t2);
+      if_block.m(div, null);
+      append(div, t3);
+      append(div, br1);
+      append(div, t4);
+      append(div, h3);
+      append(h3, t5);
+      append(h3, t6);
+      append(h3, t7);
+      append(h3, t8);
+    },
+    p(ctx2, [dirty]) {
+      if (dirty & 1 && t6_value !== (t6_value = ctx2[0].correct + 1 + ""))
+        set_data(t6, t6_value);
+      if (dirty & 1 && t8_value !== (t8_value = ctx2[0].settings.count + ""))
+        set_data(t8, t8_value);
+    },
+    i: noop,
+    o: noop,
+    d(detaching) {
+      if (detaching)
+        detach(div);
+      if_block.d();
+    }
+  };
+}
+function instance3($$self, $$props, $$invalidate) {
+  let {enddata} = $$props;
+  let percent = (enddata.correct + 1) / enddata.settings.count * 100;
+  $$self.$$set = ($$props2) => {
+    if ("enddata" in $$props2)
+      $$invalidate(0, enddata = $$props2.enddata);
+  };
+  return [enddata, percent];
+}
+var Finish = class extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance3, create_fragment3, safe_not_equal, {enddata: 0}, add_css3);
+  }
+};
+var finish_default = Finish;
+
+// src/app.svelte
+function add_css4(target) {
+  append_styles(target, "svelte-13myzy0", "h1.svelte-13myzy0{margin:0 auto;width:fit-content}.root.svelte-13myzy0{width:50%;margin:0 auto}@media(max-width: 1000px){.root.svelte-13myzy0{width:40%}}@media(max-width: 800px){.root.svelte-13myzy0{width:90%}}body{background-color:rgb(209, 223, 228)}button{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}");
+}
+function create_else_block2(ctx) {
+  let p;
+  return {
+    c() {
+      p = element("p");
+      p.textContent = "invalid menu";
+    },
+    m(target, anchor) {
+      insert(target, p, anchor);
+    },
+    p: noop,
+    i: noop,
+    o: noop,
+    d(detaching) {
+      if (detaching)
+        detach(p);
+    }
+  };
+}
+function create_if_block_2(ctx) {
+  let finish;
+  let updating_enddata;
+  let current;
+  function finish_enddata_binding(value) {
+    ctx[6](value);
+  }
+  let finish_props = {};
+  if (ctx[2] !== void 0) {
+    finish_props.enddata = ctx[2];
+  }
+  finish = new finish_default({props: finish_props});
+  binding_callbacks.push(() => bind(finish, "enddata", finish_enddata_binding));
+  return {
+    c() {
+      create_component(finish.$$.fragment);
+    },
+    m(target, anchor) {
+      mount_component(finish, target, anchor);
+      current = true;
+    },
+    p(ctx2, dirty) {
+      const finish_changes = {};
+      if (!updating_enddata && dirty & 4) {
+        updating_enddata = true;
+        finish_changes.enddata = ctx2[2];
+        add_flush_callback(() => updating_enddata = false);
+      }
+      finish.$set(finish_changes);
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(finish.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(finish.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      destroy_component(finish, detaching);
+    }
+  };
+}
+function create_if_block_12(ctx) {
   let game;
   let updating_settings;
   let current;
   function game_settings_binding(value) {
-    ctx[3](value);
+    ctx[5](value);
   }
   let game_props = {};
   if (ctx[1] !== void 0) {
@@ -1703,6 +1919,7 @@ function create_else_block(ctx) {
   }
   game = new game_default({props: game_props});
   binding_callbacks.push(() => bind(game, "settings", game_settings_binding));
+  game.$on("win", ctx[4]);
   return {
     c() {
       create_component(game.$$.fragment);
@@ -1735,62 +1952,66 @@ function create_else_block(ctx) {
     }
   };
 }
-function create_if_block(ctx) {
-  let menu;
+function create_if_block2(ctx) {
+  let menu_1;
   let current;
-  menu = new menu_default({});
-  menu.$on("startgame", ctx[2]);
+  menu_1 = new menu_default({});
+  menu_1.$on("startgame", ctx[3]);
   return {
     c() {
-      create_component(menu.$$.fragment);
+      create_component(menu_1.$$.fragment);
     },
     m(target, anchor) {
-      mount_component(menu, target, anchor);
+      mount_component(menu_1, target, anchor);
       current = true;
     },
     p: noop,
     i(local) {
       if (current)
         return;
-      transition_in(menu.$$.fragment, local);
+      transition_in(menu_1.$$.fragment, local);
       current = true;
     },
     o(local) {
-      transition_out(menu.$$.fragment, local);
+      transition_out(menu_1.$$.fragment, local);
       current = false;
     },
     d(detaching) {
-      destroy_component(menu, detaching);
+      destroy_component(menu_1, detaching);
     }
   };
 }
-function create_fragment3(ctx) {
-  let h1;
+function create_fragment4(ctx) {
+  let div;
   let t1;
   let current_block_type_index;
   let if_block;
   let if_block_anchor;
   let current;
-  const if_block_creators = [create_if_block, create_else_block];
+  const if_block_creators = [create_if_block2, create_if_block_12, create_if_block_2, create_else_block2];
   const if_blocks = [];
   function select_block_type(ctx2, dirty) {
-    if (ctx2[0])
+    if (ctx2[0] === 0)
       return 0;
-    return 1;
+    if (ctx2[0] === 1)
+      return 1;
+    if (ctx2[0] === 2)
+      return 2;
+    return 3;
   }
   current_block_type_index = select_block_type(ctx, -1);
   if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
   return {
     c() {
-      h1 = element("h1");
-      h1.textContent = "FLAG QUIZ";
+      div = element("div");
+      div.innerHTML = `<h1 class="svelte-13myzy0">FLAG QUIZ</h1>`;
       t1 = space();
       if_block.c();
       if_block_anchor = empty();
-      attr(h1, "class", "svelte-8p7i5u");
+      attr(div, "class", "root svelte-13myzy0");
     },
     m(target, anchor) {
-      insert(target, h1, anchor);
+      insert(target, div, anchor);
       insert(target, t1, anchor);
       if_blocks[current_block_type_index].m(target, anchor);
       insert(target, if_block_anchor, anchor);
@@ -1830,7 +2051,7 @@ function create_fragment3(ctx) {
     },
     d(detaching) {
       if (detaching)
-        detach(h1);
+        detach(div);
       if (detaching)
         detach(t1);
       if_blocks[current_block_type_index].d(detaching);
@@ -1839,24 +2060,41 @@ function create_fragment3(ctx) {
     }
   };
 }
-function instance3($$self, $$props, $$invalidate) {
-  let inmenu = true;
+function instance4($$self, $$props, $$invalidate) {
+  let menu = 0;
   let gsettings;
+  let enddata;
   function startgame(s) {
-    $$invalidate(0, inmenu = false);
+    $$invalidate(0, menu = 1);
     $$invalidate(1, gsettings = s.detail);
     console.log("got settings: ", s.detail);
+  }
+  function winner(w) {
+    $$invalidate(0, menu = 2);
+    $$invalidate(2, enddata = w.detail);
   }
   function game_settings_binding(value) {
     gsettings = value;
     $$invalidate(1, gsettings);
   }
-  return [inmenu, gsettings, startgame, game_settings_binding];
+  function finish_enddata_binding(value) {
+    enddata = value;
+    $$invalidate(2, enddata);
+  }
+  return [
+    menu,
+    gsettings,
+    enddata,
+    startgame,
+    winner,
+    game_settings_binding,
+    finish_enddata_binding
+  ];
 }
 var App = class extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance3, create_fragment3, safe_not_equal, {}, add_css2);
+    init(this, options, instance4, create_fragment4, safe_not_equal, {}, add_css4);
   }
 };
 var app_default = App;
