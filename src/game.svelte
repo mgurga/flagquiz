@@ -23,19 +23,22 @@
     currentflag = flaglist[num];
     flagnum = num;
     missedquestions = 0;
-    let guessing = currentflag;
 
+    // fill with random countries in the region
     for (var i = 0; i < guesses.length; i++) {
-      let rand = randomcountryflag(guessing.region);
-
-      while (rand == guessing) rand = randomcountryflag();
-
+      let rand = randomcountryflag(currentflag.region);
+      while (rand.name == currentflag.name) rand = randomcountryflag();
       guesses[i].name = rand.name;
       guesses[i].isRed = false;
     }
 
-    console.log(currentflag);
-    guesses[rand(0, guesses.length - 1)].name = guessing.name;
+    // add one country from 'similar' list if available
+    // if (currentflag.similar) {
+    //   guesses[rand(0, guesses.length)].name = currentflag.similar[rand(0, currentflag.similar.length)];
+    // }
+
+    // add correct answer
+    guesses[rand(0, guesses.length)].name = currentflag.name;
   }
 
   function chose(x) {
@@ -157,6 +160,7 @@
   .guess {
     font-size: 20pt;
   }
+
   .guess:hover {
     background-color: royalblue;
   }
@@ -165,7 +169,6 @@
     width: 75%;
     margin: 0 auto;
   }
-
 
   img {
     width: 100%;

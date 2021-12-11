@@ -571,7 +571,8 @@ var countryflags = [
   {
     name: "Australia",
     url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_Australia_%28converted%29.svg/1080px-Flag_of_Australia_%28converted%29.svg.png",
-    region: "OC"
+    region: "OC",
+    similar: ["New Zealand"]
   },
   {
     name: "Austria",
@@ -1156,7 +1157,8 @@ var countryflags = [
   {
     name: "New Zealand",
     url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Flag_of_New_Zealand.svg/1080px-Flag_of_New_Zealand.svg.png",
-    region: "OC"
+    region: "OC",
+    similar: ["Australia"]
   },
   {
     name: "Nicaragua",
@@ -1236,7 +1238,8 @@ var countryflags = [
   {
     name: "Poland",
     url: "https://upload.wikimedia.org/wikipedia/en/thumb/1/12/Flag_of_Poland.svg/1080px-Flag_of_Poland.svg.png",
-    region: "EU"
+    region: "EU",
+    similar: ["Monaco", "Indonesia"]
   },
   {
     name: "Portugal",
@@ -1246,7 +1249,8 @@ var countryflags = [
   {
     name: "Qatar",
     url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Flag_of_Qatar.svg/1080px-Flag_of_Qatar.svg.png",
-    region: "AS"
+    region: "AS",
+    similar: ["Bahrain"]
   },
   {
     name: "Romania",
@@ -1575,8 +1579,8 @@ var countryflags = [
 // src/game.svelte
 function add_css() {
   var style = element("style");
-  style.id = "svelte-19txzso-style";
-  style.textContent = ".redborder.svelte-19txzso{border:10px solid red !important}p.svelte-19txzso{width:fit-content;margin:0px;font-size:20pt}h1.svelte-19txzso{margin:0}.progress.svelte-19txzso{float:right}.center.svelte-19txzso{margin:0 auto;width:fit-content}.guess.svelte-19txzso{font-size:20pt}.guess.svelte-19txzso:hover{background-color:royalblue}.guesses.svelte-19txzso{width:75%;margin:0 auto}img.svelte-19txzso{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-19txzso{max-width:100%;max-height:50vh;width:100%;height:50vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}";
+  style.id = "svelte-1qtpln4-style";
+  style.textContent = ".redborder.svelte-1qtpln4{border:10px solid red !important}p.svelte-1qtpln4{width:fit-content;margin:0px;font-size:20pt}h1.svelte-1qtpln4{margin:0}.progress.svelte-1qtpln4{float:right}.center.svelte-1qtpln4{margin:0 auto;width:fit-content}.guess.svelte-1qtpln4{font-size:20pt}.guess.svelte-1qtpln4:hover{background-color:royalblue}.guesses.svelte-1qtpln4{width:75%;margin:0 auto}img.svelte-1qtpln4{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-1qtpln4{max-width:100%;max-height:50vh;width:100%;height:50vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}";
   append(document.head, style);
 }
 function create_fragment2(ctx) {
@@ -1654,19 +1658,19 @@ function create_fragment2(ctx) {
       t15 = space();
       button3 = element("button");
       t16 = text(t16_value);
-      attr(h1, "class", "center svelte-19txzso");
-      attr(p0, "class", "progress svelte-19txzso");
-      attr(p1, "class", "svelte-19txzso");
+      attr(h1, "class", "center svelte-1qtpln4");
+      attr(p0, "class", "progress svelte-1qtpln4");
+      attr(p1, "class", "svelte-1qtpln4");
       if (img.src !== (img_src_value = ctx[1].url))
         attr(img, "src", img_src_value);
       attr(img, "alt", "flag");
-      attr(img, "class", "svelte-19txzso");
-      attr(div0, "class", "imgcontainer svelte-19txzso");
-      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-19txzso");
-      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-19txzso");
-      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-19txzso");
-      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-19txzso");
-      attr(div1, "class", "guesses svelte-19txzso");
+      attr(img, "class", "svelte-1qtpln4");
+      attr(div0, "class", "imgcontainer svelte-1qtpln4");
+      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-1qtpln4");
+      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-1qtpln4");
+      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-1qtpln4");
+      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-1qtpln4");
+      attr(div1, "class", "guesses svelte-1qtpln4");
       attr(div2, "class", "root");
     },
     m(target, anchor) {
@@ -1721,22 +1725,22 @@ function create_fragment2(ctx) {
       }
       if (dirty & 4 && t7_value !== (t7_value = ctx2[2][0].name + ""))
         set_data(t7, t7_value);
-      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-19txzso")) {
+      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
         attr(button0, "class", button0_class_value);
       }
       if (dirty & 4 && t10_value !== (t10_value = ctx2[2][1].name + ""))
         set_data(t10, t10_value);
-      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-19txzso")) {
+      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
         attr(button1, "class", button1_class_value);
       }
       if (dirty & 4 && t13_value !== (t13_value = ctx2[2][2].name + ""))
         set_data(t13, t13_value);
-      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-19txzso")) {
+      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
         attr(button2, "class", button2_class_value);
       }
       if (dirty & 4 && t16_value !== (t16_value = ctx2[2][3].name + ""))
         set_data(t16, t16_value);
-      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-19txzso")) {
+      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
         attr(button3, "class", button3_class_value);
       }
     },
@@ -1773,16 +1777,14 @@ function instance2($$self, $$props, $$invalidate) {
     $$invalidate(1, currentflag = flaglist[num]);
     flagnum = num;
     missedquestions = 0;
-    let guessing = currentflag;
     for (var i = 0; i < guesses.length; i++) {
-      let rand2 = randomcountryflag(guessing.region);
-      while (rand2 == guessing)
+      let rand2 = randomcountryflag(currentflag.region);
+      while (rand2.name == currentflag.name)
         rand2 = randomcountryflag();
       $$invalidate(2, guesses[i].name = rand2.name, guesses);
       $$invalidate(2, guesses[i].isRed = false, guesses);
     }
-    console.log(currentflag);
-    $$invalidate(2, guesses[rand(0, guesses.length - 1)].name = guessing.name, guesses);
+    $$invalidate(2, guesses[rand(0, guesses.length)].name = currentflag.name, guesses);
   }
   function chose(x) {
     console.log("clicked button #" + x);
@@ -1860,7 +1862,7 @@ function instance2($$self, $$props, $$invalidate) {
 var Game = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-19txzso-style"))
+    if (!document.getElementById("svelte-1qtpln4-style"))
       add_css();
     init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 6, start: 7});
   }
@@ -2198,7 +2200,7 @@ function create_fragment4(ctx) {
       div.innerHTML = `<h1 class="svelte-tvo689">FLAG QUIZ</h1>`;
       t1 = space();
       style = element("style");
-      style.textContent = ".root {\n      width: 30%;\n      margin: 0 auto;\n    }\n    @media (max-width: 1100px) {\n      .root {\n        width: 60%;\n      }\n    }\n    @media (max-width: 700px) {\n      .root {\n        width: 90%;\n      }\n    }";
+      style.textContent = "/* desktop */\n    .root {\n      width: 30%;\n      margin: 0 auto;\n    }\n\n    /* small desktop */\n    @media (max-width: 1100px) {\n      .root {\n        width: 60%;\n      }\n    }\n\n    /* mobile */\n    @media (max-width: 700px) {\n      .root {\n        width: 90%;\n      }\n\n      .imgcontainer {\n        max-height: 40vh !important;\n        height: 40vh !important;\n      }\n    }";
       t3 = space();
       if_block.c();
       if_block_anchor = empty();

@@ -25,18 +25,28 @@
 
 <svelte:head>
   <style>
+    /* desktop */
     .root {
       width: 30%;
       margin: 0 auto;
     }
+
+    /* small desktop */
     @media (max-width: 1100px) {
       .root {
         width: 60%;
       }
     }
+
+    /* mobile */
     @media (max-width: 700px) {
       .root {
         width: 90%;
+      }
+
+      .imgcontainer {
+        max-height: 40vh !important;
+        height: 40vh !important;
       }
     }
   </style>

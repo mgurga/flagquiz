@@ -42,7 +42,8 @@ export const countryflags = [
     {
         "name": "Australia",
         "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_Australia_%28converted%29.svg/1080px-Flag_of_Australia_%28converted%29.svg.png",
-        "region": "OC"
+        "region": "OC",
+        "similar": ["New Zealand"]
     },
     {
         "name": "Austria",
@@ -627,7 +628,8 @@ export const countryflags = [
     {
         "name": "New Zealand",
         "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Flag_of_New_Zealand.svg/1080px-Flag_of_New_Zealand.svg.png",
-        "region": "OC"
+        "region": "OC",
+        "similar": ["Australia"]
     },
     {
         "name": "Nicaragua",
@@ -707,7 +709,8 @@ export const countryflags = [
     {
         "name": "Poland",
         "url": "https://upload.wikimedia.org/wikipedia/en/thumb/1/12/Flag_of_Poland.svg/1080px-Flag_of_Poland.svg.png",
-        "region": "EU"
+        "region": "EU",
+        "similar": ["Monaco", "Indonesia"]
     },
     {
         "name": "Portugal",
@@ -717,7 +720,8 @@ export const countryflags = [
     {
         "name": "Qatar",
         "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Flag_of_Qatar.svg/1080px-Flag_of_Qatar.svg.png",
-        "region": "AS"
+        "region": "AS",
+        "similar": ["Bahrain"]
     },
     {
         "name": "Romania",
