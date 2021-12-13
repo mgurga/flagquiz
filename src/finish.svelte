@@ -19,6 +19,9 @@
   {/if}
   <br />
   <h3 class="center">YOUR SCORE: {enddata.correct + 1}/{enddata.settings.count}</h3>
+  {#if enddata.settings.timerenabled}
+    <h3 class="center">time: {enddata.time / 10}s</h3>
+  {/if}
 </div>
 
 <style>

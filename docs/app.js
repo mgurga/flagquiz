@@ -16,13 +16,48 @@ function is_function(thing) {
 function safe_not_equal(a, b) {
   return a != a ? b == b : a !== b || (a && typeof a === "object" || typeof a === "function");
 }
+var src_url_equal_anchor;
+function src_url_equal(element_src, url) {
+  if (!src_url_equal_anchor) {
+    src_url_equal_anchor = document.createElement("a");
+  }
+  src_url_equal_anchor.href = url;
+  return element_src === src_url_equal_anchor.href;
+}
 function is_empty(obj) {
   return Object.keys(obj).length === 0;
 }
-var is_client = typeof window !== "undefined";
 var tasks = new Set();
+var is_hydrating = false;
+function start_hydrating() {
+  is_hydrating = true;
+}
+function end_hydrating() {
+  is_hydrating = false;
+}
 function append(target, node) {
   target.appendChild(node);
+}
+function append_styles(target, style_sheet_id, styles) {
+  const append_styles_to = get_root_for_style(target);
+  if (!append_styles_to.getElementById(style_sheet_id)) {
+    const style = element("style");
+    style.id = style_sheet_id;
+    style.textContent = styles;
+    append_stylesheet(append_styles_to, style);
+  }
+}
+function get_root_for_style(node) {
+  if (!node)
+    return document;
+  const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
+  if (root && root.host) {
+    return root;
+  }
+  return node.ownerDocument;
+}
+function append_stylesheet(node, style) {
+  append(node.head || node, style);
 }
 function insert(target, node, anchor) {
   target.insertBefore(node, anchor || null);
@@ -33,8 +68,8 @@ function detach(node) {
 function element(name) {
   return document.createElement(name);
 }
-function text(data2) {
-  return document.createTextNode(data2);
+function text(data) {
+  return document.createTextNode(data);
 }
 function space() {
   return text(" ");
@@ -55,10 +90,10 @@ function attr(node, attribute, value) {
 function children(element2) {
   return Array.from(element2.childNodes);
 }
-function set_data(text2, data2) {
-  data2 = "" + data2;
-  if (text2.wholeText !== data2)
-    text2.data = data2;
+function set_data(text2, data) {
+  data = "" + data;
+  if (text2.wholeText !== data)
+    text2.data = data;
 }
 function select_option(select, value) {
   for (let i = 0; i < select.options.length; i += 1) {
@@ -68,14 +103,15 @@ function select_option(select, value) {
       return;
     }
   }
+  select.selectedIndex = -1;
 }
 function select_value(select) {
   const selected_option = select.querySelector(":checked") || select.options[0];
   return selected_option && selected_option.__value;
 }
-function custom_event(type, detail) {
+function custom_event(type, detail, bubbles = false) {
   const e = document.createEvent("CustomEvent");
-  e.initCustomEvent(type, false, false, detail);
+  e.initCustomEvent(type, bubbles, false, detail);
   return e;
 }
 var active_docs = new Set();
@@ -234,18 +270,20 @@ function bind(component, name, callback) {
 function create_component(block) {
   block && block.c();
 }
-function mount_component(component, target, anchor) {
+function mount_component(component, target, anchor, customElement) {
   const {fragment, on_mount, on_destroy, after_update} = component.$$;
   fragment && fragment.m(target, anchor);
-  add_render_callback(() => {
-    const new_on_destroy = on_mount.map(run).filter(is_function);
-    if (on_destroy) {
-      on_destroy.push(...new_on_destroy);
-    } else {
-      run_all(new_on_destroy);
-    }
-    component.$$.on_mount = [];
-  });
+  if (!customElement) {
+    add_render_callback(() => {
+      const new_on_destroy = on_mount.map(run).filter(is_function);
+      if (on_destroy) {
+        on_destroy.push(...new_on_destroy);
+      } else {
+        run_all(new_on_destroy);
+      }
+      component.$$.on_mount = [];
+    });
+  }
   after_update.forEach(add_render_callback);
 }
 function destroy_component(component, detaching) {
@@ -265,10 +303,9 @@ function make_dirty(component, i) {
   }
   component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
 }
-function init(component, options, instance5, create_fragment5, not_equal, props, dirty = [-1]) {
+function init(component, options, instance5, create_fragment5, not_equal, props, append_styles2, dirty = [-1]) {
   const parent_component = current_component;
   set_current_component(component);
-  const prop_values = options.props || {};
   const $$ = component.$$ = {
     fragment: null,
     ctx: null,
@@ -278,15 +315,18 @@ function init(component, options, instance5, create_fragment5, not_equal, props,
     bound: blank_object(),
     on_mount: [],
     on_destroy: [],
+    on_disconnect: [],
     before_update: [],
     after_update: [],
-    context: new Map(parent_component ? parent_component.$$.context : []),
+    context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
     callbacks: blank_object(),
     dirty,
-    skip_bound: false
+    skip_bound: false,
+    root: options.target || parent_component.$$.root
   };
+  append_styles2 && append_styles2($$.root);
   let ready = false;
-  $$.ctx = instance5 ? instance5(component, prop_values, (i, ret, ...rest) => {
+  $$.ctx = instance5 ? instance5(component, options.props || {}, (i, ret, ...rest) => {
     const value = rest.length ? rest[0] : ret;
     if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
       if (!$$.skip_bound && $$.bound[i])
@@ -302,6 +342,7 @@ function init(component, options, instance5, create_fragment5, not_equal, props,
   $$.fragment = create_fragment5 ? create_fragment5($$.ctx) : false;
   if (options.target) {
     if (options.hydrate) {
+      start_hydrating();
       const nodes = children(options.target);
       $$.fragment && $$.fragment.l(nodes);
       nodes.forEach(detach);
@@ -310,7 +351,8 @@ function init(component, options, instance5, create_fragment5, not_equal, props,
     }
     if (options.intro)
       transition_in(component.$$.fragment);
-    mount_component(component, options.target, options.anchor);
+    mount_component(component, options.target, options.anchor, options.customElement);
+    end_hydrating();
     flush();
   }
   set_current_component(parent_component);
@@ -323,12 +365,17 @@ if (typeof HTMLElement === "function") {
       this.attachShadow({mode: "open"});
     }
     connectedCallback() {
+      const {on_mount} = this.$$;
+      this.$$.on_disconnect = on_mount.map(run).filter(is_function);
       for (const key in this.$$.slotted) {
         this.appendChild(this.$$.slotted[key]);
       }
     }
     attributeChangedCallback(attr2, _oldValue, newValue) {
       this[attr2] = newValue;
+    }
+    disconnectedCallback() {
+      run_all(this.$$.on_disconnect);
     }
     $destroy() {
       destroy_component(this, 1);
@@ -406,7 +453,7 @@ function create_fragment(ctx) {
       t0 = space();
       div = element("div");
       label0 = element("label");
-      t1 = text("Flag count:\n      ");
+      t1 = text("Flag count:\n    ");
       select = element("select");
       option0 = element("option");
       option0.textContent = "10 flags";
@@ -418,7 +465,7 @@ function create_fragment(ctx) {
       br1 = element("br");
       t6 = space();
       label1 = element("label");
-      t7 = text("Timed:\n      ");
+      t7 = text("Timed:\n    ");
       input = element("input");
       t8 = space();
       br2 = element("br");
@@ -1577,11 +1624,35 @@ var countryflags = [
 ];
 
 // src/game.svelte
-function add_css() {
-  var style = element("style");
-  style.id = "svelte-1qtpln4-style";
-  style.textContent = ".redborder.svelte-1qtpln4{border:10px solid red !important}p.svelte-1qtpln4{width:fit-content;margin:0px;font-size:20pt}h1.svelte-1qtpln4{margin:0}.progress.svelte-1qtpln4{float:right}.center.svelte-1qtpln4{margin:0 auto;width:fit-content}.guess.svelte-1qtpln4{font-size:20pt}.guess.svelte-1qtpln4:hover{background-color:royalblue}.guesses.svelte-1qtpln4{width:75%;margin:0 auto}img.svelte-1qtpln4{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-1qtpln4{max-width:100%;max-height:50vh;width:100%;height:50vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}";
-  append(document.head, style);
+function add_css(target) {
+  append_styles(target, "svelte-18lie5o", ".redborder.svelte-18lie5o{border:10px solid red !important}p.svelte-18lie5o{width:fit-content;margin:0px;font-size:20pt;display:inline-block}h1.svelte-18lie5o{margin:0}.progress.svelte-18lie5o{float:right}.center.svelte-18lie5o{margin:0 auto;width:fit-content}.guess.svelte-18lie5o{font-size:20pt}.guess.svelte-18lie5o:hover{background-color:royalblue}.guesses.svelte-18lie5o{width:75%;margin:0 auto}img.svelte-18lie5o{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-18lie5o{max-width:100%;max-height:50vh;width:100%;height:50vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}.middle.svelte-18lie5o{position:relative;left:30%;transform:translateX(-50%)}");
+}
+function create_if_block(ctx) {
+  let p;
+  let t0_value = ctx[5] / 10 + "";
+  let t0;
+  let t1;
+  return {
+    c() {
+      p = element("p");
+      t0 = text(t0_value);
+      t1 = text("s");
+      attr(p, "class", "middle svelte-18lie5o");
+    },
+    m(target, anchor) {
+      insert(target, p, anchor);
+      append(p, t0);
+      append(p, t1);
+    },
+    p(ctx2, dirty) {
+      if (dirty & 32 && t0_value !== (t0_value = ctx2[5] / 10 + ""))
+        set_data(t0, t0_value);
+    },
+    d(detaching) {
+      if (detaching)
+        detach(p);
+    }
+  };
 }
 function create_fragment2(ctx) {
   let div2;
@@ -1590,41 +1661,43 @@ function create_fragment2(ctx) {
   let p0;
   let t2;
   let t3;
-  let p1;
   let t4;
+  let p1;
   let t5;
+  let t6;
   let div0;
   let img;
   let img_src_value;
-  let t6;
+  let t7;
   let div1;
   let button0;
-  let t7_value = ctx[2][0].name + "";
-  let t7;
-  let button0_class_value;
+  let t8_value = ctx[3][0].name + "";
   let t8;
-  let br0;
+  let button0_class_value;
   let t9;
-  let button1;
-  let t10_value = ctx[2][1].name + "";
+  let br0;
   let t10;
-  let button1_class_value;
+  let button1;
+  let t11_value = ctx[3][1].name + "";
   let t11;
-  let br1;
+  let button1_class_value;
   let t12;
-  let button2;
-  let t13_value = ctx[2][2].name + "";
+  let br1;
   let t13;
-  let button2_class_value;
+  let button2;
+  let t14_value = ctx[3][2].name + "";
   let t14;
-  let br2;
+  let button2_class_value;
   let t15;
-  let button3;
-  let t16_value = ctx[2][3].name + "";
+  let br2;
   let t16;
+  let button3;
+  let t17_value = ctx[3][3].name + "";
+  let t17;
   let button3_class_value;
   let mounted;
   let dispose;
+  let if_block = ctx[0].timerenabled && create_if_block(ctx);
   return {
     c() {
       div2 = element("div");
@@ -1632,45 +1705,49 @@ function create_fragment2(ctx) {
       h1.textContent = "What flag is this???";
       t1 = space();
       p0 = element("p");
-      t2 = text(ctx[0]);
+      t2 = text(ctx[4]);
       t3 = space();
+      if (if_block)
+        if_block.c();
+      t4 = space();
       p1 = element("p");
-      t4 = text(ctx[3]);
-      t5 = space();
+      t5 = text(ctx[1]);
+      t6 = space();
       div0 = element("div");
       img = element("img");
-      t6 = space();
+      t7 = space();
       div1 = element("div");
       button0 = element("button");
-      t7 = text(t7_value);
-      t8 = space();
-      br0 = element("br");
+      t8 = text(t8_value);
       t9 = space();
+      br0 = element("br");
+      t10 = space();
       button1 = element("button");
-      t10 = text(t10_value);
-      t11 = space();
-      br1 = element("br");
+      t11 = text(t11_value);
       t12 = space();
+      br1 = element("br");
+      t13 = space();
       button2 = element("button");
-      t13 = text(t13_value);
-      t14 = space();
-      br2 = element("br");
+      t14 = text(t14_value);
       t15 = space();
+      br2 = element("br");
+      t16 = space();
       button3 = element("button");
-      t16 = text(t16_value);
-      attr(h1, "class", "center svelte-1qtpln4");
-      attr(p0, "class", "progress svelte-1qtpln4");
-      attr(p1, "class", "svelte-1qtpln4");
-      if (img.src !== (img_src_value = ctx[1].url))
+      t17 = text(t17_value);
+      attr(h1, "class", "center svelte-18lie5o");
+      attr(p0, "style", "");
+      attr(p0, "class", "svelte-18lie5o");
+      attr(p1, "class", "progress svelte-18lie5o");
+      if (!src_url_equal(img.src, img_src_value = ctx[2].url))
         attr(img, "src", img_src_value);
       attr(img, "alt", "flag");
-      attr(img, "class", "svelte-1qtpln4");
-      attr(div0, "class", "imgcontainer svelte-1qtpln4");
-      attr(button0, "class", button0_class_value = "guess " + (ctx[2][0].isRed ? "redborder" : "") + " svelte-1qtpln4");
-      attr(button1, "class", button1_class_value = "guess " + (ctx[2][1].isRed ? "redborder" : "") + " svelte-1qtpln4");
-      attr(button2, "class", button2_class_value = "guess " + (ctx[2][2].isRed ? "redborder" : "") + " svelte-1qtpln4");
-      attr(button3, "class", button3_class_value = "guess " + (ctx[2][3].isRed ? "redborder" : "") + " svelte-1qtpln4");
-      attr(div1, "class", "guesses svelte-1qtpln4");
+      attr(img, "class", "svelte-18lie5o");
+      attr(div0, "class", "imgcontainer svelte-18lie5o");
+      attr(button0, "class", button0_class_value = "guess " + (ctx[3][0].isRed ? "redborder" : "") + " svelte-18lie5o");
+      attr(button1, "class", button1_class_value = "guess " + (ctx[3][1].isRed ? "redborder" : "") + " svelte-18lie5o");
+      attr(button2, "class", button2_class_value = "guess " + (ctx[3][2].isRed ? "redborder" : "") + " svelte-18lie5o");
+      attr(button3, "class", button3_class_value = "guess " + (ctx[3][3].isRed ? "redborder" : "") + " svelte-18lie5o");
+      attr(div1, "class", "guesses svelte-18lie5o");
       attr(div2, "class", "root");
     },
     m(target, anchor) {
@@ -1680,67 +1757,82 @@ function create_fragment2(ctx) {
       append(div2, p0);
       append(p0, t2);
       append(div2, t3);
+      if (if_block)
+        if_block.m(div2, null);
+      append(div2, t4);
       append(div2, p1);
-      append(p1, t4);
-      append(div2, t5);
+      append(p1, t5);
+      append(div2, t6);
       append(div2, div0);
       append(div0, img);
-      append(div2, t6);
+      append(div2, t7);
       append(div2, div1);
       append(div1, button0);
-      append(button0, t7);
-      append(div1, t8);
-      append(div1, br0);
+      append(button0, t8);
       append(div1, t9);
+      append(div1, br0);
+      append(div1, t10);
       append(div1, button1);
-      append(button1, t10);
-      append(div1, t11);
-      append(div1, br1);
+      append(button1, t11);
       append(div1, t12);
+      append(div1, br1);
+      append(div1, t13);
       append(div1, button2);
-      append(button2, t13);
-      append(div1, t14);
-      append(div1, br2);
+      append(button2, t14);
       append(div1, t15);
+      append(div1, br2);
+      append(div1, t16);
       append(div1, button3);
-      append(button3, t16);
+      append(button3, t17);
       if (!mounted) {
         dispose = [
-          listen(window, "keydown", ctx[5]),
-          listen(button0, "click", ctx[8]),
-          listen(button1, "click", ctx[9]),
-          listen(button2, "click", ctx[10]),
-          listen(button3, "click", ctx[11])
+          listen(window, "keydown", ctx[7]),
+          listen(button0, "click", ctx[9]),
+          listen(button1, "click", ctx[10]),
+          listen(button2, "click", ctx[11]),
+          listen(button3, "click", ctx[12])
         ];
         mounted = true;
       }
     },
     p(ctx2, [dirty]) {
-      if (dirty & 1)
-        set_data(t2, ctx2[0]);
-      if (dirty & 8)
-        set_data(t4, ctx2[3]);
-      if (dirty & 2 && img.src !== (img_src_value = ctx2[1].url)) {
+      if (dirty & 16)
+        set_data(t2, ctx2[4]);
+      if (ctx2[0].timerenabled) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block(ctx2);
+          if_block.c();
+          if_block.m(div2, t4);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+      if (dirty & 2)
+        set_data(t5, ctx2[1]);
+      if (dirty & 4 && !src_url_equal(img.src, img_src_value = ctx2[2].url)) {
         attr(img, "src", img_src_value);
       }
-      if (dirty & 4 && t7_value !== (t7_value = ctx2[2][0].name + ""))
-        set_data(t7, t7_value);
-      if (dirty & 4 && button0_class_value !== (button0_class_value = "guess " + (ctx2[2][0].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
+      if (dirty & 8 && t8_value !== (t8_value = ctx2[3][0].name + ""))
+        set_data(t8, t8_value);
+      if (dirty & 8 && button0_class_value !== (button0_class_value = "guess " + (ctx2[3][0].isRed ? "redborder" : "") + " svelte-18lie5o")) {
         attr(button0, "class", button0_class_value);
       }
-      if (dirty & 4 && t10_value !== (t10_value = ctx2[2][1].name + ""))
-        set_data(t10, t10_value);
-      if (dirty & 4 && button1_class_value !== (button1_class_value = "guess " + (ctx2[2][1].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
+      if (dirty & 8 && t11_value !== (t11_value = ctx2[3][1].name + ""))
+        set_data(t11, t11_value);
+      if (dirty & 8 && button1_class_value !== (button1_class_value = "guess " + (ctx2[3][1].isRed ? "redborder" : "") + " svelte-18lie5o")) {
         attr(button1, "class", button1_class_value);
       }
-      if (dirty & 4 && t13_value !== (t13_value = ctx2[2][2].name + ""))
-        set_data(t13, t13_value);
-      if (dirty & 4 && button2_class_value !== (button2_class_value = "guess " + (ctx2[2][2].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
+      if (dirty & 8 && t14_value !== (t14_value = ctx2[3][2].name + ""))
+        set_data(t14, t14_value);
+      if (dirty & 8 && button2_class_value !== (button2_class_value = "guess " + (ctx2[3][2].isRed ? "redborder" : "") + " svelte-18lie5o")) {
         attr(button2, "class", button2_class_value);
       }
-      if (dirty & 4 && t16_value !== (t16_value = ctx2[2][3].name + ""))
-        set_data(t16, t16_value);
-      if (dirty & 4 && button3_class_value !== (button3_class_value = "guess " + (ctx2[2][3].isRed ? "redborder" : "") + " svelte-1qtpln4")) {
+      if (dirty & 8 && t17_value !== (t17_value = ctx2[3][3].name + ""))
+        set_data(t17, t17_value);
+      if (dirty & 8 && button3_class_value !== (button3_class_value = "guess " + (ctx2[3][3].isRed ? "redborder" : "") + " svelte-18lie5o")) {
         attr(button3, "class", button3_class_value);
       }
     },
@@ -1749,6 +1841,8 @@ function create_fragment2(ctx) {
     d(detaching) {
       if (detaching)
         detach(div2);
+      if (if_block)
+        if_block.d();
       mounted = false;
       run_all(dispose);
     }
@@ -1773,18 +1867,20 @@ function instance2($$self, $$props, $$invalidate) {
   let missedquestions = 0;
   let scorecount = "??/??";
   const dispatch = createEventDispatcher();
+  let timer = 0;
+  let timerinterval;
   function populatequestion(num) {
-    $$invalidate(1, currentflag = flaglist[num]);
+    $$invalidate(2, currentflag = flaglist[num]);
     flagnum = num;
     missedquestions = 0;
     for (var i = 0; i < guesses.length; i++) {
       let rand2 = randomcountryflag(currentflag.region);
       while (rand2.name == currentflag.name)
         rand2 = randomcountryflag();
-      $$invalidate(2, guesses[i].name = rand2.name, guesses);
-      $$invalidate(2, guesses[i].isRed = false, guesses);
+      $$invalidate(3, guesses[i].name = rand2.name, guesses);
+      $$invalidate(3, guesses[i].isRed = false, guesses);
     }
-    $$invalidate(2, guesses[rand(0, guesses.length)].name = currentflag.name, guesses);
+    $$invalidate(3, guesses[rand(0, guesses.length)].name = currentflag.name, guesses);
   }
   function chose(x) {
     console.log("clicked button #" + x);
@@ -1794,14 +1890,15 @@ function instance2($$self, $$props, $$invalidate) {
         correct++;
       flagnum++;
       if (flagnum + 1 == settings.count) {
-        dispatch("win", {settings, correct});
+        clearInterval(timerinterval);
+        dispatch("win", {settings, correct, time: timer});
       }
       populatequestion(flagnum);
-      $$invalidate(0, progresscheck = flagnum + 1 + "/" + settings.count);
-      $$invalidate(3, scorecount = "Score: " + correct);
+      $$invalidate(1, progresscheck = flagnum + 1 + "/" + settings.count);
+      $$invalidate(4, scorecount = "Score: " + correct);
     } else {
       console.log("WRONG");
-      $$invalidate(2, guesses[x].isRed = true, guesses);
+      $$invalidate(3, guesses[x].isRed = true, guesses);
       missedquestions++;
     }
   }
@@ -1821,8 +1918,13 @@ function instance2($$self, $$props, $$invalidate) {
       }
     }
     console.log(flaglist);
-    $$invalidate(0, progresscheck = "1/" + settings.count);
-    $$invalidate(3, scorecount = "Score: 0");
+    $$invalidate(1, progresscheck = "1/" + settings.count);
+    $$invalidate(4, scorecount = "Score: 0");
+    if (settings.timerenabled) {
+      timerinterval = setInterval(function() {
+        $$invalidate(5, timer += 1);
+      }, 100);
+    }
     populatequestion(0);
   }
   function handleKeydown(event) {
@@ -1842,16 +1944,17 @@ function instance2($$self, $$props, $$invalidate) {
   const click_handler_3 = () => chose(3);
   $$self.$$set = ($$props2) => {
     if ("settings" in $$props2)
-      $$invalidate(6, settings = $$props2.settings);
+      $$invalidate(0, settings = $$props2.settings);
   };
   return [
+    settings,
     progresscheck,
     currentflag,
     guesses,
     scorecount,
+    timer,
     chose,
     handleKeydown,
-    settings,
     start,
     click_handler,
     click_handler_1,
@@ -1862,22 +1965,17 @@ function instance2($$self, $$props, $$invalidate) {
 var Game = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-1qtpln4-style"))
-      add_css();
-    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 6, start: 7});
+    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 0, start: 8}, add_css);
   }
   get start() {
-    return this.$$.ctx[7];
+    return this.$$.ctx[8];
   }
 };
 var game_default = Game;
 
 // src/finish.svelte
-function add_css2() {
-  var style = element("style");
-  style.id = "svelte-132t7yw-style";
-  style.textContent = ".root.svelte-132t7yw{width:50%;margin:0 auto}@media(max-width: 1000px){.root.svelte-132t7yw{width:40%}}@media(max-width: 800px){.root.svelte-132t7yw{width:90%}}.result.svelte-132t7yw,.rainbow.svelte-132t7yw,.center.svelte-132t7yw{margin:0 auto;font-size:30pt;width:fit-content}.result.svelte-132t7yw{animation:svelte-132t7yw-monochrome 2.5s linear;animation-iteration-count:infinite}.rainbow.svelte-132t7yw{animation:svelte-132t7yw-rainbow 2.5s linear;animation-iteration-count:infinite;font-size:40pt}@keyframes svelte-132t7yw-rainbow{100%,0%{color:rgb(255,0,0)}8%{color:rgb(255,127,0)}16%{color:rgb(255,255,0)}25%{color:rgb(127,255,0)}33%{color:rgb(0,255,0)}41%{color:rgb(0,255,127)}50%{color:rgb(0,255,255)}58%{color:rgb(0,127,255)}66%{color:rgb(0,0,255)}75%{color:rgb(127,0,255)}83%{color:rgb(255,0,255)}91%{color:rgb(255,0,127)}}@keyframes svelte-132t7yw-monochrome{0%,100%{color:white}50%{color:black}}";
-  append(document.head, style);
+function add_css2(target) {
+  append_styles(target, "svelte-132t7yw", ".root.svelte-132t7yw{width:50%;margin:0 auto}@media(max-width: 1000px){.root.svelte-132t7yw{width:40%}}@media(max-width: 800px){.root.svelte-132t7yw{width:90%}}.result.svelte-132t7yw,.rainbow.svelte-132t7yw,.center.svelte-132t7yw{margin:0 auto;font-size:30pt;width:fit-content}.result.svelte-132t7yw{animation:svelte-132t7yw-monochrome 2.5s linear;animation-iteration-count:infinite}.rainbow.svelte-132t7yw{animation:svelte-132t7yw-rainbow 2.5s linear;animation-iteration-count:infinite;font-size:40pt}@keyframes svelte-132t7yw-rainbow{100%,0%{color:rgb(255,0,0)}8%{color:rgb(255,127,0)}16%{color:rgb(255,255,0)}25%{color:rgb(127,255,0)}33%{color:rgb(0,255,0)}41%{color:rgb(0,255,127)}50%{color:rgb(0,255,255)}58%{color:rgb(0,127,255)}66%{color:rgb(0,0,255)}75%{color:rgb(127,0,255)}83%{color:rgb(255,0,255)}91%{color:rgb(255,0,127)}}@keyframes svelte-132t7yw-monochrome{0%,100%{color:white}50%{color:black}}");
 }
 function create_else_block(ctx) {
   let h2;
@@ -1896,7 +1994,7 @@ function create_else_block(ctx) {
     }
   };
 }
-function create_if_block_1(ctx) {
+function create_if_block_2(ctx) {
   let h2;
   return {
     c() {
@@ -1913,7 +2011,7 @@ function create_if_block_1(ctx) {
     }
   };
 }
-function create_if_block(ctx) {
+function create_if_block_1(ctx) {
   let h1;
   return {
     c() {
@@ -1927,6 +2025,36 @@ function create_if_block(ctx) {
     d(detaching) {
       if (detaching)
         detach(h1);
+    }
+  };
+}
+function create_if_block2(ctx) {
+  let h3;
+  let t0;
+  let t1_value = ctx[0].time / 100 + "";
+  let t1;
+  let t2;
+  return {
+    c() {
+      h3 = element("h3");
+      t0 = text("time: ");
+      t1 = text(t1_value);
+      t2 = text("s");
+      attr(h3, "class", "center svelte-132t7yw");
+    },
+    m(target, anchor) {
+      insert(target, h3, anchor);
+      append(h3, t0);
+      append(h3, t1);
+      append(h3, t2);
+    },
+    p(ctx2, dirty) {
+      if (dirty & 1 && t1_value !== (t1_value = ctx2[0].time / 100 + ""))
+        set_data(t1, t1_value);
+    },
+    d(detaching) {
+      if (detaching)
+        detach(h3);
     }
   };
 }
@@ -1946,15 +2074,17 @@ function create_fragment3(ctx) {
   let t7;
   let t8_value = ctx[0].settings.count + "";
   let t8;
+  let t9;
   function select_block_type(ctx2, dirty) {
     if (ctx2[1] == 100)
-      return create_if_block;
-    if (ctx2[1] < 100 && ctx2[1] >= 50)
       return create_if_block_1;
+    if (ctx2[1] < 100 && ctx2[1] >= 50)
+      return create_if_block_2;
     return create_else_block;
   }
   let current_block_type = select_block_type(ctx, -1);
-  let if_block = current_block_type(ctx);
+  let if_block0 = current_block_type(ctx);
+  let if_block1 = ctx[0].settings.timerenabled && create_if_block2(ctx);
   return {
     c() {
       div = element("div");
@@ -1963,7 +2093,7 @@ function create_fragment3(ctx) {
       t1 = space();
       br0 = element("br");
       t2 = space();
-      if_block.c();
+      if_block0.c();
       t3 = space();
       br1 = element("br");
       t4 = space();
@@ -1972,6 +2102,9 @@ function create_fragment3(ctx) {
       t6 = text(t6_value);
       t7 = text("/");
       t8 = text(t8_value);
+      t9 = space();
+      if (if_block1)
+        if_block1.c();
       attr(h1, "class", "center svelte-132t7yw");
       attr(h3, "class", "center svelte-132t7yw");
       attr(div, "class", "root svelte-132t7yw");
@@ -1982,7 +2115,7 @@ function create_fragment3(ctx) {
       append(div, t1);
       append(div, br0);
       append(div, t2);
-      if_block.m(div, null);
+      if_block0.m(div, null);
       append(div, t3);
       append(div, br1);
       append(div, t4);
@@ -1991,19 +2124,36 @@ function create_fragment3(ctx) {
       append(h3, t6);
       append(h3, t7);
       append(h3, t8);
+      append(div, t9);
+      if (if_block1)
+        if_block1.m(div, null);
     },
     p(ctx2, [dirty]) {
       if (dirty & 1 && t6_value !== (t6_value = ctx2[0].correct + 1 + ""))
         set_data(t6, t6_value);
       if (dirty & 1 && t8_value !== (t8_value = ctx2[0].settings.count + ""))
         set_data(t8, t8_value);
+      if (ctx2[0].settings.timerenabled) {
+        if (if_block1) {
+          if_block1.p(ctx2, dirty);
+        } else {
+          if_block1 = create_if_block2(ctx2);
+          if_block1.c();
+          if_block1.m(div, null);
+        }
+      } else if (if_block1) {
+        if_block1.d(1);
+        if_block1 = null;
+      }
     },
     i: noop,
     o: noop,
     d(detaching) {
       if (detaching)
         detach(div);
-      if_block.d();
+      if_block0.d();
+      if (if_block1)
+        if_block1.d();
     }
   };
 }
@@ -2019,19 +2169,14 @@ function instance3($$self, $$props, $$invalidate) {
 var Finish = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-132t7yw-style"))
-      add_css2();
-    init(this, options, instance3, create_fragment3, safe_not_equal, {enddata: 0});
+    init(this, options, instance3, create_fragment3, safe_not_equal, {enddata: 0}, add_css2);
   }
 };
 var finish_default = Finish;
 
 // src/app.svelte
-function add_css3() {
-  var style = element("style");
-  style.id = "svelte-tvo689-style";
-  style.textContent = "h1.svelte-tvo689{margin:0 auto;width:fit-content}body{background-color:rgb(209, 223, 228)}button{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}";
-  append(document.head, style);
+function add_css3(target) {
+  append_styles(target, "svelte-tvo689", "h1.svelte-tvo689{margin:0 auto;width:fit-content}body{background-color:rgb(209, 223, 228)}button{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}");
 }
 function create_else_block2(ctx) {
   let p;
@@ -2052,25 +2197,25 @@ function create_else_block2(ctx) {
     }
   };
 }
-function create_if_block_2(ctx) {
-  let finish2;
+function create_if_block_22(ctx) {
+  let finish;
   let updating_enddata;
   let current;
   function finish_enddata_binding(value) {
-    ctx[6].call(null, value);
+    ctx[6](value);
   }
   let finish_props = {};
   if (ctx[2] !== void 0) {
     finish_props.enddata = ctx[2];
   }
-  finish2 = new finish_default({props: finish_props});
-  binding_callbacks.push(() => bind(finish2, "enddata", finish_enddata_binding));
+  finish = new finish_default({props: finish_props});
+  binding_callbacks.push(() => bind(finish, "enddata", finish_enddata_binding));
   return {
     c() {
-      create_component(finish2.$$.fragment);
+      create_component(finish.$$.fragment);
     },
     m(target, anchor) {
-      mount_component(finish2, target, anchor);
+      mount_component(finish, target, anchor);
       current = true;
     },
     p(ctx2, dirty) {
@@ -2080,43 +2225,43 @@ function create_if_block_2(ctx) {
         finish_changes.enddata = ctx2[2];
         add_flush_callback(() => updating_enddata = false);
       }
-      finish2.$set(finish_changes);
+      finish.$set(finish_changes);
     },
     i(local) {
       if (current)
         return;
-      transition_in(finish2.$$.fragment, local);
+      transition_in(finish.$$.fragment, local);
       current = true;
     },
     o(local) {
-      transition_out(finish2.$$.fragment, local);
+      transition_out(finish.$$.fragment, local);
       current = false;
     },
     d(detaching) {
-      destroy_component(finish2, detaching);
+      destroy_component(finish, detaching);
     }
   };
 }
 function create_if_block_12(ctx) {
-  let game2;
+  let game;
   let updating_settings;
   let current;
   function game_settings_binding(value) {
-    ctx[5].call(null, value);
+    ctx[5](value);
   }
   let game_props = {};
   if (ctx[1] !== void 0) {
     game_props.settings = ctx[1];
   }
-  game2 = new game_default({props: game_props});
-  binding_callbacks.push(() => bind(game2, "settings", game_settings_binding));
-  game2.$on("win", ctx[4]);
+  game = new game_default({props: game_props});
+  binding_callbacks.push(() => bind(game, "settings", game_settings_binding));
+  game.$on("win", ctx[4]);
   return {
     c() {
-      create_component(game2.$$.fragment);
+      create_component(game.$$.fragment);
     },
     m(target, anchor) {
-      mount_component(game2, target, anchor);
+      mount_component(game, target, anchor);
       current = true;
     },
     p(ctx2, dirty) {
@@ -2126,24 +2271,24 @@ function create_if_block_12(ctx) {
         game_changes.settings = ctx2[1];
         add_flush_callback(() => updating_settings = false);
       }
-      game2.$set(game_changes);
+      game.$set(game_changes);
     },
     i(local) {
       if (current)
         return;
-      transition_in(game2.$$.fragment, local);
+      transition_in(game.$$.fragment, local);
       current = true;
     },
     o(local) {
-      transition_out(game2.$$.fragment, local);
+      transition_out(game.$$.fragment, local);
       current = false;
     },
     d(detaching) {
-      destroy_component(game2, detaching);
+      destroy_component(game, detaching);
     }
   };
 }
-function create_if_block2(ctx) {
+function create_if_block3(ctx) {
   let menu_1;
   let current;
   menu_1 = new menu_default({});
@@ -2181,7 +2326,7 @@ function create_fragment4(ctx) {
   let if_block;
   let if_block_anchor;
   let current;
-  const if_block_creators = [create_if_block2, create_if_block_12, create_if_block_2, create_else_block2];
+  const if_block_creators = [create_if_block3, create_if_block_12, create_if_block_22, create_else_block2];
   const if_blocks = [];
   function select_block_type(ctx2, dirty) {
     if (ctx2[0] === 0)
@@ -2262,16 +2407,16 @@ function create_fragment4(ctx) {
   };
 }
 function instance4($$self, $$props, $$invalidate) {
-  let menu2 = 0;
+  let menu = 0;
   let gsettings;
   let enddata;
   function startgame(s) {
-    $$invalidate(0, menu2 = 1);
+    $$invalidate(0, menu = 1);
     $$invalidate(1, gsettings = s.detail);
     console.log("got settings: ", s.detail);
   }
   function winner(w) {
-    $$invalidate(0, menu2 = 2);
+    $$invalidate(0, menu = 2);
     $$invalidate(2, enddata = w.detail);
   }
   function game_settings_binding(value) {
@@ -2283,7 +2428,7 @@ function instance4($$self, $$props, $$invalidate) {
     $$invalidate(2, enddata);
   }
   return [
-    menu2,
+    menu,
     gsettings,
     enddata,
     startgame,
@@ -2295,9 +2440,7 @@ function instance4($$self, $$props, $$invalidate) {
 var App = class extends SvelteComponent {
   constructor(options) {
     super();
-    if (!document.getElementById("svelte-tvo689-style"))
-      add_css3();
-    init(this, options, instance4, create_fragment4, safe_not_equal, {});
+    init(this, options, instance4, create_fragment4, safe_not_equal, {}, add_css3);
   }
 };
 var app_default = App;

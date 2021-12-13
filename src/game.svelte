@@ -18,6 +18,8 @@
   let missedquestions = 0;
   let scorecount = "??/??";
   const dispatch = createEventDispatcher();
+  let timer = 0;
+  let timerinterval;
 
   function populatequestion(num) {
     currentflag = flaglist[num];
@@ -48,9 +50,11 @@
       if (missedquestions == 0) correct++;
       flagnum++;
       if ((flagnum + 1) == settings.count) {
+        clearInterval(timerinterval);
         dispatch("win", {
             "settings": settings,
             "correct": correct,
+            "time": timer
         });
       }
       populatequestion(flagnum);
@@ -89,6 +93,12 @@
     progresscheck = "1/" + settings.count;
     scorecount = "Score: 0";
 
+    if(settings.timerenabled) {
+      timerinterval = setInterval(function() {
+        timer += 1;
+      }, 100);
+    }
+
     populatequestion(0);
   }
 
@@ -105,8 +115,11 @@
 <svelte:window on:keydown={handleKeydown} />
 <div class="root">
   <h1 class="center">What flag is this???</h1>
+  <p style="">{scorecount}</p>
+  {#if settings.timerenabled}
+  <p class="middle">{timer / 10}s</p>
+  {/if}
   <p class="progress">{progresscheck}</p>
-  <p>{scorecount}</p>
   <div class="imgcontainer">
     <img src={currentflag.url} alt="flag" />
   </div>
@@ -142,6 +155,7 @@
     width: fit-content;
     margin: 0px;
     font-size: 20pt;
+    display: inline-block;
   }
 
   h1 {
@@ -188,5 +202,11 @@
     justify-content: center;
     align-items: center;
     padding: 10px;
+  }
+
+  .middle {
+    position: relative;
+    left: 30%;
+    transform: translateX(-50%);
   }
 </style>
