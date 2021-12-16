@@ -17,6 +17,10 @@
     menu = 2;
     enddata = w.detail;
   }
+
+  function gotomain() {
+    menu = 0;
+  }
 </script>
 
 <div class="root">
@@ -57,7 +61,7 @@
 {:else if menu === 1}
   <Game bind:settings={gsettings} on:win={winner} />
 {:else if menu === 2}
-  <Finish bind:enddata />
+  <Finish bind:enddata on:gotomain={gotomain} />
 {:else}
   <p>invalid menu</p>
 {/if}

@@ -16,48 +16,13 @@ function is_function(thing) {
 function safe_not_equal(a, b) {
   return a != a ? b == b : a !== b || (a && typeof a === "object" || typeof a === "function");
 }
-var src_url_equal_anchor;
-function src_url_equal(element_src, url) {
-  if (!src_url_equal_anchor) {
-    src_url_equal_anchor = document.createElement("a");
-  }
-  src_url_equal_anchor.href = url;
-  return element_src === src_url_equal_anchor.href;
-}
 function is_empty(obj) {
   return Object.keys(obj).length === 0;
 }
+var is_client = typeof window !== "undefined";
 var tasks = new Set();
-var is_hydrating = false;
-function start_hydrating() {
-  is_hydrating = true;
-}
-function end_hydrating() {
-  is_hydrating = false;
-}
 function append(target, node) {
   target.appendChild(node);
-}
-function append_styles(target, style_sheet_id, styles) {
-  const append_styles_to = get_root_for_style(target);
-  if (!append_styles_to.getElementById(style_sheet_id)) {
-    const style = element("style");
-    style.id = style_sheet_id;
-    style.textContent = styles;
-    append_stylesheet(append_styles_to, style);
-  }
-}
-function get_root_for_style(node) {
-  if (!node)
-    return document;
-  const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
-  if (root && root.host) {
-    return root;
-  }
-  return node.ownerDocument;
-}
-function append_stylesheet(node, style) {
-  append(node.head || node, style);
 }
 function insert(target, node, anchor) {
   target.insertBefore(node, anchor || null);
@@ -68,8 +33,8 @@ function detach(node) {
 function element(name) {
   return document.createElement(name);
 }
-function text(data) {
-  return document.createTextNode(data);
+function text(data2) {
+  return document.createTextNode(data2);
 }
 function space() {
   return text(" ");
@@ -90,10 +55,10 @@ function attr(node, attribute, value) {
 function children(element2) {
   return Array.from(element2.childNodes);
 }
-function set_data(text2, data) {
-  data = "" + data;
-  if (text2.wholeText !== data)
-    text2.data = data;
+function set_data(text2, data2) {
+  data2 = "" + data2;
+  if (text2.wholeText !== data2)
+    text2.data = data2;
 }
 function select_option(select, value) {
   for (let i = 0; i < select.options.length; i += 1) {
@@ -103,15 +68,14 @@ function select_option(select, value) {
       return;
     }
   }
-  select.selectedIndex = -1;
 }
 function select_value(select) {
   const selected_option = select.querySelector(":checked") || select.options[0];
   return selected_option && selected_option.__value;
 }
-function custom_event(type, detail, bubbles = false) {
+function custom_event(type, detail) {
   const e = document.createEvent("CustomEvent");
-  e.initCustomEvent(type, bubbles, false, detail);
+  e.initCustomEvent(type, false, false, detail);
   return e;
 }
 var active_docs = new Set();
@@ -270,20 +234,18 @@ function bind(component, name, callback) {
 function create_component(block) {
   block && block.c();
 }
-function mount_component(component, target, anchor, customElement) {
+function mount_component(component, target, anchor) {
   const {fragment, on_mount, on_destroy, after_update} = component.$$;
   fragment && fragment.m(target, anchor);
-  if (!customElement) {
-    add_render_callback(() => {
-      const new_on_destroy = on_mount.map(run).filter(is_function);
-      if (on_destroy) {
-        on_destroy.push(...new_on_destroy);
-      } else {
-        run_all(new_on_destroy);
-      }
-      component.$$.on_mount = [];
-    });
-  }
+  add_render_callback(() => {
+    const new_on_destroy = on_mount.map(run).filter(is_function);
+    if (on_destroy) {
+      on_destroy.push(...new_on_destroy);
+    } else {
+      run_all(new_on_destroy);
+    }
+    component.$$.on_mount = [];
+  });
   after_update.forEach(add_render_callback);
 }
 function destroy_component(component, detaching) {
@@ -303,9 +265,10 @@ function make_dirty(component, i) {
   }
   component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
 }
-function init(component, options, instance5, create_fragment5, not_equal, props, append_styles2, dirty = [-1]) {
+function init(component, options, instance5, create_fragment5, not_equal, props, dirty = [-1]) {
   const parent_component = current_component;
   set_current_component(component);
+  const prop_values = options.props || {};
   const $$ = component.$$ = {
     fragment: null,
     ctx: null,
@@ -315,18 +278,15 @@ function init(component, options, instance5, create_fragment5, not_equal, props,
     bound: blank_object(),
     on_mount: [],
     on_destroy: [],
-    on_disconnect: [],
     before_update: [],
     after_update: [],
-    context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
+    context: new Map(parent_component ? parent_component.$$.context : []),
     callbacks: blank_object(),
     dirty,
-    skip_bound: false,
-    root: options.target || parent_component.$$.root
+    skip_bound: false
   };
-  append_styles2 && append_styles2($$.root);
   let ready = false;
-  $$.ctx = instance5 ? instance5(component, options.props || {}, (i, ret, ...rest) => {
+  $$.ctx = instance5 ? instance5(component, prop_values, (i, ret, ...rest) => {
     const value = rest.length ? rest[0] : ret;
     if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
       if (!$$.skip_bound && $$.bound[i])
@@ -342,7 +302,6 @@ function init(component, options, instance5, create_fragment5, not_equal, props,
   $$.fragment = create_fragment5 ? create_fragment5($$.ctx) : false;
   if (options.target) {
     if (options.hydrate) {
-      start_hydrating();
       const nodes = children(options.target);
       $$.fragment && $$.fragment.l(nodes);
       nodes.forEach(detach);
@@ -351,8 +310,7 @@ function init(component, options, instance5, create_fragment5, not_equal, props,
     }
     if (options.intro)
       transition_in(component.$$.fragment);
-    mount_component(component, options.target, options.anchor, options.customElement);
-    end_hydrating();
+    mount_component(component, options.target, options.anchor);
     flush();
   }
   set_current_component(parent_component);
@@ -365,17 +323,12 @@ if (typeof HTMLElement === "function") {
       this.attachShadow({mode: "open"});
     }
     connectedCallback() {
-      const {on_mount} = this.$$;
-      this.$$.on_disconnect = on_mount.map(run).filter(is_function);
       for (const key in this.$$.slotted) {
         this.appendChild(this.$$.slotted[key]);
       }
     }
     attributeChangedCallback(attr2, _oldValue, newValue) {
       this[attr2] = newValue;
-    }
-    disconnectedCallback() {
-      run_all(this.$$.on_disconnect);
     }
     $destroy() {
       destroy_component(this, 1);
@@ -1624,8 +1577,11 @@ var countryflags = [
 ];
 
 // src/game.svelte
-function add_css(target) {
-  append_styles(target, "svelte-18lie5o", ".redborder.svelte-18lie5o{border:10px solid red !important}p.svelte-18lie5o{width:fit-content;margin:0px;font-size:20pt;display:inline-block}h1.svelte-18lie5o{margin:0}.progress.svelte-18lie5o{float:right}.center.svelte-18lie5o{margin:0 auto;width:fit-content}.guess.svelte-18lie5o{font-size:20pt}.guess.svelte-18lie5o:hover{background-color:royalblue}.guesses.svelte-18lie5o{width:75%;margin:0 auto}img.svelte-18lie5o{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-18lie5o{max-width:100%;max-height:50vh;width:100%;height:50vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}.middle.svelte-18lie5o{position:relative;left:30%;transform:translateX(-50%)}");
+function add_css() {
+  var style = element("style");
+  style.id = "svelte-18lie5o-style";
+  style.textContent = ".redborder.svelte-18lie5o{border:10px solid red !important}p.svelte-18lie5o{width:fit-content;margin:0px;font-size:20pt;display:inline-block}h1.svelte-18lie5o{margin:0}.progress.svelte-18lie5o{float:right}.center.svelte-18lie5o{margin:0 auto;width:fit-content}.guess.svelte-18lie5o{font-size:20pt}.guess.svelte-18lie5o:hover{background-color:royalblue}.guesses.svelte-18lie5o{width:75%;margin:0 auto}img.svelte-18lie5o{width:100%;height:fit-content;margin:auto;display:block}.imgcontainer.svelte-18lie5o{max-width:100%;max-height:50vh;width:100%;height:50vh;object-fit:cover;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:10px}.middle.svelte-18lie5o{position:relative;left:30%;transform:translateX(-50%)}";
+  append(document.head, style);
 }
 function create_if_block(ctx) {
   let p;
@@ -1735,10 +1691,9 @@ function create_fragment2(ctx) {
       button3 = element("button");
       t17 = text(t17_value);
       attr(h1, "class", "center svelte-18lie5o");
-      attr(p0, "style", "");
       attr(p0, "class", "svelte-18lie5o");
       attr(p1, "class", "progress svelte-18lie5o");
-      if (!src_url_equal(img.src, img_src_value = ctx[2].url))
+      if (img.src !== (img_src_value = ctx[2].url))
         attr(img, "src", img_src_value);
       attr(img, "alt", "flag");
       attr(img, "class", "svelte-18lie5o");
@@ -1812,7 +1767,7 @@ function create_fragment2(ctx) {
       }
       if (dirty & 2)
         set_data(t5, ctx2[1]);
-      if (dirty & 4 && !src_url_equal(img.src, img_src_value = ctx2[2].url)) {
+      if (dirty & 4 && img.src !== (img_src_value = ctx2[2].url)) {
         attr(img, "src", img_src_value);
       }
       if (dirty & 8 && t8_value !== (t8_value = ctx2[3][0].name + ""))
@@ -1965,7 +1920,9 @@ function instance2($$self, $$props, $$invalidate) {
 var Game = class extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 0, start: 8}, add_css);
+    if (!document.getElementById("svelte-18lie5o-style"))
+      add_css();
+    init(this, options, instance2, create_fragment2, safe_not_equal, {settings: 0, start: 8});
   }
   get start() {
     return this.$$.ctx[8];
@@ -1974,8 +1931,11 @@ var Game = class extends SvelteComponent {
 var game_default = Game;
 
 // src/finish.svelte
-function add_css2(target) {
-  append_styles(target, "svelte-132t7yw", ".root.svelte-132t7yw{width:50%;margin:0 auto}@media(max-width: 1000px){.root.svelte-132t7yw{width:40%}}@media(max-width: 800px){.root.svelte-132t7yw{width:90%}}.result.svelte-132t7yw,.rainbow.svelte-132t7yw,.center.svelte-132t7yw{margin:0 auto;font-size:30pt;width:fit-content}.result.svelte-132t7yw{animation:svelte-132t7yw-monochrome 2.5s linear;animation-iteration-count:infinite}.rainbow.svelte-132t7yw{animation:svelte-132t7yw-rainbow 2.5s linear;animation-iteration-count:infinite;font-size:40pt}@keyframes svelte-132t7yw-rainbow{100%,0%{color:rgb(255,0,0)}8%{color:rgb(255,127,0)}16%{color:rgb(255,255,0)}25%{color:rgb(127,255,0)}33%{color:rgb(0,255,0)}41%{color:rgb(0,255,127)}50%{color:rgb(0,255,255)}58%{color:rgb(0,127,255)}66%{color:rgb(0,0,255)}75%{color:rgb(127,0,255)}83%{color:rgb(255,0,255)}91%{color:rgb(255,0,127)}}@keyframes svelte-132t7yw-monochrome{0%,100%{color:white}50%{color:black}}");
+function add_css2() {
+  var style = element("style");
+  style.id = "svelte-132t7yw-style";
+  style.textContent = ".root.svelte-132t7yw{width:50%;margin:0 auto}@media(max-width: 1000px){.root.svelte-132t7yw{width:40%}}@media(max-width: 800px){.root.svelte-132t7yw{width:90%}}.result.svelte-132t7yw,.rainbow.svelte-132t7yw,.center.svelte-132t7yw{margin:0 auto;font-size:30pt;width:fit-content}.result.svelte-132t7yw{animation:svelte-132t7yw-monochrome 2.5s linear;animation-iteration-count:infinite}.rainbow.svelte-132t7yw{animation:svelte-132t7yw-rainbow 2.5s linear;animation-iteration-count:infinite;font-size:40pt}@keyframes svelte-132t7yw-rainbow{100%,0%{color:rgb(255,0,0)}8%{color:rgb(255,127,0)}16%{color:rgb(255,255,0)}25%{color:rgb(127,255,0)}33%{color:rgb(0,255,0)}41%{color:rgb(0,255,127)}50%{color:rgb(0,255,255)}58%{color:rgb(0,127,255)}66%{color:rgb(0,0,255)}75%{color:rgb(127,0,255)}83%{color:rgb(255,0,255)}91%{color:rgb(255,0,127)}}@keyframes svelte-132t7yw-monochrome{0%,100%{color:white}50%{color:black}}";
+  append(document.head, style);
 }
 function create_else_block(ctx) {
   let h2;
@@ -2031,7 +1991,7 @@ function create_if_block_1(ctx) {
 function create_if_block2(ctx) {
   let h3;
   let t0;
-  let t1_value = ctx[0].time / 100 + "";
+  let t1_value = ctx[0].time / 10 + "";
   let t1;
   let t2;
   return {
@@ -2049,7 +2009,7 @@ function create_if_block2(ctx) {
       append(h3, t2);
     },
     p(ctx2, dirty) {
-      if (dirty & 1 && t1_value !== (t1_value = ctx2[0].time / 100 + ""))
+      if (dirty & 1 && t1_value !== (t1_value = ctx2[0].time / 10 + ""))
         set_data(t1, t1_value);
     },
     d(detaching) {
@@ -2075,6 +2035,12 @@ function create_fragment3(ctx) {
   let t8_value = ctx[0].settings.count + "";
   let t8;
   let t9;
+  let t10;
+  let br2;
+  let t11;
+  let button;
+  let mounted;
+  let dispose;
   function select_block_type(ctx2, dirty) {
     if (ctx2[1] == 100)
       return create_if_block_1;
@@ -2105,6 +2071,11 @@ function create_fragment3(ctx) {
       t9 = space();
       if (if_block1)
         if_block1.c();
+      t10 = space();
+      br2 = element("br");
+      t11 = space();
+      button = element("button");
+      button.textContent = "Try Again";
       attr(h1, "class", "center svelte-132t7yw");
       attr(h3, "class", "center svelte-132t7yw");
       attr(div, "class", "root svelte-132t7yw");
@@ -2127,6 +2098,14 @@ function create_fragment3(ctx) {
       append(div, t9);
       if (if_block1)
         if_block1.m(div, null);
+      append(div, t10);
+      append(div, br2);
+      append(div, t11);
+      append(div, button);
+      if (!mounted) {
+        dispose = listen(button, "click", ctx[2]);
+        mounted = true;
+      }
     },
     p(ctx2, [dirty]) {
       if (dirty & 1 && t6_value !== (t6_value = ctx2[0].correct + 1 + ""))
@@ -2139,7 +2118,7 @@ function create_fragment3(ctx) {
         } else {
           if_block1 = create_if_block2(ctx2);
           if_block1.c();
-          if_block1.m(div, null);
+          if_block1.m(div, t10);
         }
       } else if (if_block1) {
         if_block1.d(1);
@@ -2154,29 +2133,40 @@ function create_fragment3(ctx) {
       if_block0.d();
       if (if_block1)
         if_block1.d();
+      mounted = false;
+      dispose();
     }
   };
 }
 function instance3($$self, $$props, $$invalidate) {
   let {enddata} = $$props;
   let percent = (enddata.correct + 1) / enddata.settings.count * 100;
+  const dispatch = createEventDispatcher();
+  function tryagain() {
+    dispatch("gotomain");
+  }
   $$self.$$set = ($$props2) => {
     if ("enddata" in $$props2)
       $$invalidate(0, enddata = $$props2.enddata);
   };
-  return [enddata, percent];
+  return [enddata, percent, tryagain];
 }
 var Finish = class extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance3, create_fragment3, safe_not_equal, {enddata: 0}, add_css2);
+    if (!document.getElementById("svelte-132t7yw-style"))
+      add_css2();
+    init(this, options, instance3, create_fragment3, safe_not_equal, {enddata: 0});
   }
 };
 var finish_default = Finish;
 
 // src/app.svelte
-function add_css3(target) {
-  append_styles(target, "svelte-tvo689", "h1.svelte-tvo689{margin:0 auto;width:fit-content}body{background-color:rgb(209, 223, 228)}button{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}");
+function add_css3() {
+  var style = element("style");
+  style.id = "svelte-tvo689-style";
+  style.textContent = "h1.svelte-tvo689{margin:0 auto;width:fit-content}body{background-color:rgb(209, 223, 228)}button{width:100%;border:1px solid black;text-align:center;background-color:rgb(77, 77, 255);color:white;padding:10px;margin-top:2px;margin-bottom:2px;margin-left:auto;margin-right:auto}";
+  append(document.head, style);
 }
 function create_else_block2(ctx) {
   let p;
@@ -2198,24 +2188,25 @@ function create_else_block2(ctx) {
   };
 }
 function create_if_block_22(ctx) {
-  let finish;
+  let finish2;
   let updating_enddata;
   let current;
   function finish_enddata_binding(value) {
-    ctx[6](value);
+    ctx[7].call(null, value);
   }
   let finish_props = {};
   if (ctx[2] !== void 0) {
     finish_props.enddata = ctx[2];
   }
-  finish = new finish_default({props: finish_props});
-  binding_callbacks.push(() => bind(finish, "enddata", finish_enddata_binding));
+  finish2 = new finish_default({props: finish_props});
+  binding_callbacks.push(() => bind(finish2, "enddata", finish_enddata_binding));
+  finish2.$on("gotomain", ctx[5]);
   return {
     c() {
-      create_component(finish.$$.fragment);
+      create_component(finish2.$$.fragment);
     },
     m(target, anchor) {
-      mount_component(finish, target, anchor);
+      mount_component(finish2, target, anchor);
       current = true;
     },
     p(ctx2, dirty) {
@@ -2225,43 +2216,43 @@ function create_if_block_22(ctx) {
         finish_changes.enddata = ctx2[2];
         add_flush_callback(() => updating_enddata = false);
       }
-      finish.$set(finish_changes);
+      finish2.$set(finish_changes);
     },
     i(local) {
       if (current)
         return;
-      transition_in(finish.$$.fragment, local);
+      transition_in(finish2.$$.fragment, local);
       current = true;
     },
     o(local) {
-      transition_out(finish.$$.fragment, local);
+      transition_out(finish2.$$.fragment, local);
       current = false;
     },
     d(detaching) {
-      destroy_component(finish, detaching);
+      destroy_component(finish2, detaching);
     }
   };
 }
 function create_if_block_12(ctx) {
-  let game;
+  let game2;
   let updating_settings;
   let current;
   function game_settings_binding(value) {
-    ctx[5](value);
+    ctx[6].call(null, value);
   }
   let game_props = {};
   if (ctx[1] !== void 0) {
     game_props.settings = ctx[1];
   }
-  game = new game_default({props: game_props});
-  binding_callbacks.push(() => bind(game, "settings", game_settings_binding));
-  game.$on("win", ctx[4]);
+  game2 = new game_default({props: game_props});
+  binding_callbacks.push(() => bind(game2, "settings", game_settings_binding));
+  game2.$on("win", ctx[4]);
   return {
     c() {
-      create_component(game.$$.fragment);
+      create_component(game2.$$.fragment);
     },
     m(target, anchor) {
-      mount_component(game, target, anchor);
+      mount_component(game2, target, anchor);
       current = true;
     },
     p(ctx2, dirty) {
@@ -2271,20 +2262,20 @@ function create_if_block_12(ctx) {
         game_changes.settings = ctx2[1];
         add_flush_callback(() => updating_settings = false);
       }
-      game.$set(game_changes);
+      game2.$set(game_changes);
     },
     i(local) {
       if (current)
         return;
-      transition_in(game.$$.fragment, local);
+      transition_in(game2.$$.fragment, local);
       current = true;
     },
     o(local) {
-      transition_out(game.$$.fragment, local);
+      transition_out(game2.$$.fragment, local);
       current = false;
     },
     d(detaching) {
-      destroy_component(game, detaching);
+      destroy_component(game2, detaching);
     }
   };
 }
@@ -2407,17 +2398,20 @@ function create_fragment4(ctx) {
   };
 }
 function instance4($$self, $$props, $$invalidate) {
-  let menu = 0;
+  let menu2 = 0;
   let gsettings;
   let enddata;
   function startgame(s) {
-    $$invalidate(0, menu = 1);
+    $$invalidate(0, menu2 = 1);
     $$invalidate(1, gsettings = s.detail);
     console.log("got settings: ", s.detail);
   }
   function winner(w) {
-    $$invalidate(0, menu = 2);
+    $$invalidate(0, menu2 = 2);
     $$invalidate(2, enddata = w.detail);
+  }
+  function gotomain() {
+    $$invalidate(0, menu2 = 0);
   }
   function game_settings_binding(value) {
     gsettings = value;
@@ -2428,11 +2422,12 @@ function instance4($$self, $$props, $$invalidate) {
     $$invalidate(2, enddata);
   }
   return [
-    menu,
+    menu2,
     gsettings,
     enddata,
     startgame,
     winner,
+    gotomain,
     game_settings_binding,
     finish_enddata_binding
   ];
@@ -2440,7 +2435,9 @@ function instance4($$self, $$props, $$invalidate) {
 var App = class extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance4, create_fragment4, safe_not_equal, {}, add_css3);
+    if (!document.getElementById("svelte-tvo689-style"))
+      add_css3();
+    init(this, options, instance4, create_fragment4, safe_not_equal, {});
   }
 };
 var app_default = App;

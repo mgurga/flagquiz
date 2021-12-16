@@ -1,7 +1,14 @@
 <script>
   export let enddata;
 
+  import { createEventDispatcher } from "svelte";
+  
   let percent = ((enddata.correct + 1) / enddata.settings.count) * 100;
+  const dispatch = createEventDispatcher();
+
+  function tryagain() {
+    dispatch("gotomain");
+  }
 </script>
 
 <div class="root">
@@ -22,6 +29,8 @@
   {#if enddata.settings.timerenabled}
     <h3 class="center">time: {enddata.time / 10}s</h3>
   {/if}
+  <br />
+  <button on:click={tryagain}>Try Again</button>
 </div>
 
 <style>
