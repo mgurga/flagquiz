@@ -9,3 +9,12 @@ Try it [here](https://mgurga.github.io/flagquiz/).
 - Optional Timer
 - Displays similar flags together for added difficulty
 - Mobile-friendly layout
+
+## How to build
+To build you must have Nodejs installed.
+```
+git clone https://github.com/mgurga/flagquiz
+cd flagquiz
+npm install
+npm start
+```
